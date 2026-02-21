@@ -1,26 +1,48 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-wood-100: #f5eedc;
+  --color-wood-200: #e3d2b3;
+  --color-wood-300: #cca573;
+  --color-wood-400: #b98b53;
+  --color-wood-500: #9e6b36;
+  --color-wood-600: #855328;
+  --color-wood-700: #6b401f;
+  --color-wood-800: #55331a;
+  --color-wood-900: #452a17;
+
+  --color-night-800: #2d2621;
+  --color-night-900: #1f1a16;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-wood-100);
+    --foreground: var(--color-wood-900);
+    --btn-bg: var(--color-wood-300);
+    --btn-hover: var(--color-wood-400);
+    --btn-text: var(--color-wood-900);
+    --card-bg: #ffffff;
+    --border-warm: var(--color-wood-200);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: var(--color-night-900);
+      --foreground: var(--color-wood-100);
+      --btn-bg: var(--color-wood-700);
+      --btn-hover: var(--color-wood-600);
+      --btn-text: var(--color-wood-100);
+      --card-bg: var(--color-night-800);
+      --border-warm: var(--color-wood-800);
+    }
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: Arial, Helvetica, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }

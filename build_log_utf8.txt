@@ -1,0 +1,116 @@
+﻿
+> src_temp@0.1.0 build
+> next build
+
+node.exe : [@serwist/ne
+xt] WARNING: You are us
+ing '@serwist/next' wit
+h `next dev --turbopack
+`, but it doesn't suppo
+rt Turbopack. Do one of
+ the following:
+строка:1 знак:1
++ & "C:\nvm4w\nodejs/no
+de.exe" "C:\nvm4w\nodej
+s/node_modules/npm/bin/
+np ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([@serwist/nex   
+ t]... the followin    
+g::String) [], Rem    o
+teException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+- Set `disable` to `pro
+cess.env.NODE_ENV !== "
+production"`.
+
+- Use webpack by runnin
+g `next dev --webpack` 
+instead of `next dev --
+turbopack`.
+
+- Migrate to '@serwist/
+turbopack' which has ex
+perimental support for 
+Turbopack. See https://
+serwist.pages.dev/docs/
+next/turbo for more inf
+ormation.
+
+- Migrate to configurat
+or mode which has suppo
+rt for Turbopack. See h
+ttps://serwist.pages.de
+v/docs/next/config for 
+more information. 
+
+Follow https://github.c
+om/serwist/serwist/issu
+es/54 for progress on S
+erwist + Turbopack. You
+ can also suppress this
+ warning by setting SER
+WIST_SUPPRESS_TURBOPACK
+_WARNING=1.
+
+тЦ▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+тип ERROR: This build i
+s using Turbopack, with
+ a `webpack` config and
+ no `turbopack` config.
+   This may be a mistak
+e.
+
+   As of Next.js 16 Tur
+bopack is enabled by de
+fault and
+   custom webpack confi
+gurations may need to b
+e migrated to Turbopack
+.
+
+   NOTE: your `webpack`
+ config may have been a
+dded by a configuration
+ plugin.
+
+   To configure Turbopa
+ck, see https://nextjs.
+org/docs/app/api-refere
+nce/next-config-js/turb
+opack
+
+   TIP: Many applicatio
+ns work fine under Turb
+opack with no configura
+tion,
+   if that is the case 
+for you, you can silenc
+e this error by passing
+ the
+   `--turbopack` or `--
+webpack` flag explicitl
+y or simply setting an 
+   empty turbopack conf
+ig in your Next config 
+file (e.g. `turbopack: 
+{}`).
+
+> Build error occurred
+Error: Call retries wer
+e exceeded
+    at ignore-listed fr
+ames {
+  type: 'WorkerError'
+}
