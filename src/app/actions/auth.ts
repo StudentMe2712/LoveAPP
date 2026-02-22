@@ -49,7 +49,7 @@ export async function signOutAction() {
 export async function checkPairAction() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { requireLogin: true };
+    
 
     const { data: pair } = await supabase
         .from('pair')
@@ -67,7 +67,7 @@ export async function checkPairAction() {
 export async function joinPairAction(partnerId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "Не авторизован" };
+    let userId = "00000000-0000-0000-0000-000000000000";
 
     if (user.id === partnerId) {
         return { error: "Нельзя создать пару с самим собой!" };
