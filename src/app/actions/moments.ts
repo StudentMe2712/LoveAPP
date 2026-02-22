@@ -2,6 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import fs from "fs/promises";
+import path from "path";
+
+const UPLOADS_DIR = "\\\\itskom\\Y\\Даулет\\images";
 
 export async function createMomentAction(formData: FormData) {
     try {
@@ -14,31 +18,32 @@ export async function createMomentAction(formData: FormData) {
 
         if (!photo) return { error: "Фото обязательно" };
 
-        // 1. Upload to Supabase Storage
-        const fileExt = photo.name.split('.').pop();
+        const fileExt = photo.name.split('.').pop() || 'jpg';
         const fileName = `${userId}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = path.join(UPLOADS_DIR, fileName);
 
-        const { error: uploadError } = await supabase.storage
-            .from('moments')
-            .upload(filePath, photo);
+        let publicUrl = "";
 
-        if (uploadError) {
-            console.error("Storage upload error", uploadError);
-            return { error: "Ошибка загрузки файла" };
+        try {
+            // Attempt to create dir just in case, though it's a network share
+            await fs.mkdir(UPLOADS_DIR, { recursive: true }).catch(() => { });
+
+            const arrayBuffer = await photo.arrayBuffer();
+            const buffer = new Uint8Array(arrayBuffer);
+            await fs.writeFile(filePath, buffer);
+
+            publicUrl = `/api/images/${fileName}`;
+        } catch (e) {
+            console.error("Local file write error", e);
+            return { error: "Ошибка сохранения файла на сервере" };
         }
-
-        // Get public URL
-        const { data: publicUrlData } = supabase.storage
-            .from('moments')
-            .getPublicUrl(filePath);
 
         // 2. Insert DB record
         const { error: insertError } = await supabase
             .from('moments')
             .insert({
                 sender_id: userId,
-                photo_url: publicUrlData.publicUrl,
+                photo_url: publicUrl,
                 caption: caption || null
             });
 

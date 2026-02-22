@@ -4,39 +4,40 @@ import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export async function signInWithEmailAction(email: string) {
+export async function signInWithPasswordAction(username: string, pass: string) {
     const supabase = await createClient();
-    // Use the origin from headers, fallback to localhost for safety in dev
-    let origin = 'http://localhost:3000';
-    try {
-        if (process.env.NEXT_PUBLIC_SITE_URL) {
-            origin = process.env.NEXT_PUBLIC_SITE_URL;
-        } else if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-            origin = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-        } else if (process.env.VERCEL_URL) {
-            origin = `https://${process.env.VERCEL_URL}`;
-        } else {
-            const h = await headers();
-            const originHeader = h.get('origin') || h.get('host');
-            if (originHeader) {
-                origin = originHeader.startsWith('http') ? originHeader : `https://${originHeader}`;
-            }
-        }
-    } catch {
-        // ignore
-    }
+    const email = `${username.trim().toLowerCase()}@domik.local`;
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
         email,
-        options: {
-            emailRedirectTo: `${origin}/auth/confirm`,
-        },
+        password: pass,
     });
 
     if (error) {
+        // If login fails, try to sign up automatically (if not already registered)
+        if (error.message.includes("Invalid login credentials") || error.message.includes("Email not confirmed")) {
+            const { error: signUpError } = await supabase.auth.signUp({
+                email,
+                password: pass,
+            });
+
+            if (signUpError) {
+                console.error("SignUp error", signUpError);
+                return { error: "Неверный логин или пароль." };
+            }
+
+            // Retry sign in
+            const { error: retryError } = await supabase.auth.signInWithPassword({ email, password: pass });
+            if (retryError) {
+                return { error: "Пользователь создан, но вход запрещен. Вам нужно отключить 'Confirm email' в настройках Supabase." };
+            }
+            return { success: true };
+        }
+
         console.error("Auth error", error);
-        return { error: "Не удалось отправить ссылку на email." };
+        return { error: "Неверный логин или пароль." };
     }
+
     return { success: true };
 }
 
