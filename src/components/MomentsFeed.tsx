@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { createMomentAction } from '@/app/actions/moments';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 export type Moment = {
     id: string;
@@ -81,7 +82,10 @@ export default function MomentsFeed() {
 
     return (
         <div className="w-full mt-6">
-            <h2 className="text-[#6b5c54] dark:text-[#a3948c] font-bold text-sm mb-2 pl-2">Сегодняшний момент</h2>
+            <div className="w-full flex justify-between items-end mb-2 px-2">
+                <h2 className="text-[#6b5c54] dark:text-[#a3948c] font-bold text-sm">Сегодняшний момент</h2>
+                <Link href="/gallery" className="text-xs font-bold text-[#cca573] dark:text-[#b98b53] hover:underline">Галерея →</Link>
+            </div>
 
             <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handlePhotoUpload} />
 

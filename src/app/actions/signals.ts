@@ -31,14 +31,12 @@ export async function sendSignalAction(signalType: string) {
         const { data: pairData, error: pairError } = await supabase
             .from("pair")
             .select("user1_id, user2_id")
-            .limit(1)
-            .single();
+            .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+            .maybeSingle();
 
-        if (pairError && pairError.code !== 'PGRST116') {
+        if (pairError) {
             console.error("Pair fetch error", pairError);
-            if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('dummy')) {
-                return { error: "Ошибка при получении данных пары" };
-            }
+            // We don't return an error here so the signal is at least saved to DB
         }
 
         // 3. Save signal to DB (Supabase)
