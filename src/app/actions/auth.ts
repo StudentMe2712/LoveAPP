@@ -9,10 +9,18 @@ export async function signInWithEmailAction(email: string) {
     // Use the origin from headers, fallback to localhost for safety in dev
     let origin = 'http://localhost:3000';
     try {
-        const h = await headers();
-        const originHeader = h.get('origin') || h.get('host');
-        if (originHeader) {
-            origin = originHeader.startsWith('http') ? originHeader : `https://${originHeader}`;
+        if (process.env.NEXT_PUBLIC_SITE_URL) {
+            origin = process.env.NEXT_PUBLIC_SITE_URL;
+        } else if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+            origin = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+        } else if (process.env.VERCEL_URL) {
+            origin = `https://${process.env.VERCEL_URL}`;
+        } else {
+            const h = await headers();
+            const originHeader = h.get('origin') || h.get('host');
+            if (originHeader) {
+                origin = originHeader.startsWith('http') ? originHeader : `https://${originHeader}`;
+            }
         }
     } catch {
         // ignore
