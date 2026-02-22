@@ -49,16 +49,16 @@ export async function signOutAction() {
 export async function checkPairAction() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+    let userId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     const { data: pair } = await supabase
         .from('pair')
         .select('*')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
         .maybeSingle();
 
     if (!pair) {
-        return { requirePair: true, userId: user.id };
+        return { requirePair: true, userId: userId };
     }
 
     return { success: true, pair };
@@ -69,7 +69,7 @@ export async function joinPairAction(partnerId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     let userId = "00000000-0000-0000-0000-000000000000";
 
-    if (user.id === partnerId) {
+    if (userId === partnerId) {
         return { error: "Нельзя создать пару с самим собой!" };
     }
 
@@ -77,7 +77,7 @@ export async function joinPairAction(partnerId: string) {
     const { error } = await supabase
         .from('pair')
         .insert({
-            user1_id: user.id,
+            user1_id: userId,
             user2_id: partnerId
         });
 
