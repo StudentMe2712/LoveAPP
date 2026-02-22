@@ -71,11 +71,11 @@ export async function updateProfileAvatarAction(formData: FormData) {
     const file = formData.get('avatar') as File;
     const displayName = formData.get('displayName') as string;
 
-    let finalAvatarUrl = user.user_metadata?.avatar_url;
+    let finalAvatarUrl = user?.user_metadata?.avatar_url;
 
     if (file && file.size > 0) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+        const fileName = `${userId}-${Math.random()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
             .from('moments')
@@ -95,7 +95,7 @@ export async function updateProfileAvatarAction(formData: FormData) {
 
     const { error } = await supabase.auth.updateUser({
         data: {
-            display_name: displayName || user.user_metadata?.display_name,
+            display_name: displayName || user?.user_metadata?.display_name,
             avatar_url: finalAvatarUrl
         }
     });
