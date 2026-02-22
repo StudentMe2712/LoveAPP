@@ -15,9 +15,7 @@ export default function PairPage() {
     useEffect(() => {
         const checkStatus = async () => {
             const res = await checkPairAction();
-            if (res.requireLogin) {
-                router.replace('/login');
-            } else if (res.success && res.pair) {
+            if (res.success && res.pair) {
                 router.replace('/'); // Already in a pair
             } else if (res.requirePair) {
                 setMyId(res.userId || "");
