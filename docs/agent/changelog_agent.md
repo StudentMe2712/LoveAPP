@@ -55,3 +55,9 @@
 - [Journey] Restored anti-stress heart mechanics on `/journey`: tap combo, floating rewards ("плюшки"), and an auto-click mode with turbo upgrades.
 - [Journey] Moved the interactive heart from bottom position to the upper road focus area to match the new `journey-bg` composition without embedded heart.
 - [Journey] Tuned hero typography to blend with background: reduced size/contrast for `Наш Путь`, `МЫ ВМЕСТЕ УЖЕ`, and timer digits/labels for a softer cinematic look.
+- [Journey] Switched background source to `public/journey-bg.png` so manual file replacement is reflected on the page without syncing `src/assets`.
+- [Infra] Added no-cache headers for `/journey-bg.png` to reduce stale background issues behind tunnel/browser caches.
+- [Journey] Removed the visible heart stats/control panel on `/journey` while keeping the auto-clicker and turbo progression logic running in the background.
+- [Journey] Adjusted heart anchor position upward to align with the previous upper-heart spot in the road composition.
+- [Journey] Restored rich click feedback on the heart: confetti bursts, periodic WOW/firework effects, and extra floating rewards on combo milestones.
+- [Nav] Re-enabled `BottomNav` visibility on `/journey`.

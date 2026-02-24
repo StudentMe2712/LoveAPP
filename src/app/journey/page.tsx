@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import Image from "next/image";
 import { createBrowserClient } from "@supabase/ssr";
-import journeyBg from "@/assets/journey-bg.png";
+import confetti from "canvas-confetti";
 
 type TimerParts = {
     days: number;
@@ -45,8 +45,7 @@ export default function JourneyPage() {
     const [now, setNow] = useState(() => new Date());
     const [loading, setLoading] = useState(true);
     const [heartScore, setHeartScore] = useState(0);
-    const [combo, setCombo] = useState(0);
-    const [autoClickEnabled, setAutoClickEnabled] = useState(true);
+    const autoClickEnabled = true;
     const [autoLevel, setAutoLevel] = useState(1);
     const [floatingRewards, setFloatingRewards] = useState<FloatingReward[]>([]);
     const [tapFlash, setTapFlash] = useState(false);
@@ -117,6 +116,54 @@ export default function JourneyPage() {
         setFloatingRewards((current) => current.filter((item) => item.id !== id));
     }, []);
 
+    const launchWowEffects = useCallback(
+        (combo: number) => {
+            confetti({
+                particleCount: 24,
+                spread: 56,
+                startVelocity: 28,
+                scalar: 0.9,
+                ticks: 120,
+                origin: { x: 0.5, y: 0.78 },
+                colors: ["#ff5ea8", "#ff8f67", "#ffd36c", "#ffffff"],
+            });
+
+            if (combo >= 6 && combo % 3 === 0) {
+                confetti({
+                    particleCount: 72,
+                    spread: 95,
+                    startVelocity: 42,
+                    scalar: 1.05,
+                    ticks: 180,
+                    origin: { x: 0.5, y: 0.72 },
+                    colors: ["#ff5ea8", "#ffd36c", "#ff8f67", "#fff2d0"],
+                });
+                pushFloatingReward("WOW! ✨");
+            }
+
+            if (combo >= 12 && combo % 6 === 0) {
+                confetti({
+                    particleCount: 64,
+                    angle: 60,
+                    spread: 70,
+                    startVelocity: 46,
+                    origin: { x: 0.15, y: 0.78 },
+                    colors: ["#ff5ea8", "#ffd36c", "#ffffff"],
+                });
+                confetti({
+                    particleCount: 64,
+                    angle: 120,
+                    spread: 70,
+                    startVelocity: 46,
+                    origin: { x: 0.85, y: 0.78 },
+                    colors: ["#ff5ea8", "#ffd36c", "#ffffff"],
+                });
+                pushFloatingReward("ФЕЙЕРВЕРК! 🎆");
+            }
+        },
+        [pushFloatingReward],
+    );
+
     const triggerTapFlash = useCallback(() => {
         if (tapFlashTimeoutRef.current) {
             window.clearTimeout(tapFlashTimeoutRef.current);
@@ -133,8 +180,6 @@ export default function JourneyPage() {
         const nextCombo = nowMs - lastTapRef.current <= 1400 ? comboRef.current + 1 : 1;
         lastTapRef.current = nowMs;
         comboRef.current = nextCombo;
-        setCombo(nextCombo);
-
         const gain = nextCombo >= 14 ? 3 : nextCombo >= 7 ? 2 : 1;
         setHeartScore((current) => current + gain);
         pushFloatingReward(`+${gain} ❤️`);
@@ -143,14 +188,14 @@ export default function JourneyPage() {
             pushFloatingReward();
         }
 
+        launchWowEffects(nextCombo);
         triggerTapFlash();
-    }, [pushFloatingReward, triggerTapFlash]);
+    }, [launchWowEffects, pushFloatingReward, triggerTapFlash]);
 
     useEffect(() => {
         const interval = window.setInterval(() => {
             if (Date.now() - lastTapRef.current > 1700 && comboRef.current > 0) {
                 comboRef.current = 0;
-                setCombo(0);
             }
         }, 450);
         return () => window.clearInterval(interval);
@@ -181,12 +226,26 @@ export default function JourneyPage() {
         [],
     );
 
+    // Keep turbo progression even without visible control buttons.
+    useEffect(() => {
+        if (autoLevel === 1 && heartScore >= 25) {
+            setAutoLevel(2);
+            pushFloatingReward("Турбо x2");
+            return;
+        }
+        if (autoLevel === 2 && heartScore >= 80) {
+            setAutoLevel(3);
+            pushFloatingReward("Турбо x3");
+        }
+    }, [autoLevel, heartScore, pushFloatingReward]);
+
     const timer = startedAt ? buildTimer(startedAt, now) : null;
+    const journeyBgSrc = "/journey-bg.png";
 
     return (
         <main className="relative w-full min-h-[100dvh] overflow-hidden">
             <Image
-                src={journeyBg}
+                src={journeyBgSrc}
                 alt="Наш путь фон"
                 fill
                 priority
@@ -286,33 +345,6 @@ export default function JourneyPage() {
                             </span>
                         </button>
 
-                        <div className="journey-heart-panel mt-3 rounded-2xl border border-white/40 bg-black/28 px-4 py-2 text-center backdrop-blur-[2px]">
-                            <div className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-white/88">
-                                Сердечки: {heartScore} · Комбо x{combo}
-                            </div>
-                            <div className="mt-1 flex items-center justify-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setAutoClickEnabled((value) => !value)}
-                                    className="rounded-lg border border-white/45 bg-white/12 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-white"
-                                >
-                                    {autoClickEnabled ? "Автоклик: ВКЛ" : "Автоклик: ВЫКЛ"}
-                                </button>
-                                {autoLevel < 3 && heartScore >= (autoLevel === 1 ? 25 : 80) ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const nextLevel = autoLevel + 1;
-                                            setAutoLevel(nextLevel);
-                                            pushFloatingReward(`Турбо x${nextLevel}`);
-                                        }}
-                                        className="rounded-lg border border-[#ffd78b]/80 bg-[#ffd78b]/20 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-[#fff3d5]"
-                                    >
-                                        Плюшка: Турбо x{autoLevel + 1}
-                                    </button>
-                                ) : null}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -380,7 +412,7 @@ export default function JourneyPage() {
                 }
 
                 .journey-heart-zone {
-                    top: clamp(62%, 67%, 73%);
+                    top: clamp(56%, 61%, 67%);
                 }
 
                 .journey-heart-btn {
@@ -397,11 +429,6 @@ export default function JourneyPage() {
 
                 .journey-heart-btn--tap {
                     transform: scale(1.12);
-                }
-
-                .journey-heart-panel {
-                    min-width: 260px;
-                    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
                 }
 
                 .journey-reward-layer {
@@ -512,12 +539,7 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart-zone {
-                        top: clamp(63%, 71%, 79%);
-                    }
-
-                    .journey-heart-panel {
-                        min-width: 224px;
-                        padding: 8px 10px;
+                        top: clamp(59%, 65%, 74%);
                     }
 
                     .journey-reward-layer {
@@ -554,15 +576,7 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart-zone {
-                        top: clamp(64%, 72%, 81%);
-                    }
-
-                    .journey-heart-panel {
-                        min-width: 210px;
-                    }
-
-                    .journey-heart-panel :global(button) {
-                        font-size: 10px;
+                        top: clamp(61%, 67%, 77%);
                     }
                 }
             `}</style>

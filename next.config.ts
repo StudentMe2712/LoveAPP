@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
             bodySizeLimit: '10mb',
         },
     },
+    async headers() {
+        return [
+            {
+                source: '/journey-bg.png',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'no-cache, no-store, must-revalidate',
+                    },
+                ],
+            },
+        ];
+    },
     images: {
         remotePatterns: [
             {
