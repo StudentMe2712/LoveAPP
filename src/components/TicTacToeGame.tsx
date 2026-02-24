@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { checkPairAction } from '@/app/actions/auth';
+import { getTicTacToeScoreAction, incrementTicTacToeScoreAction } from '@/app/actions/tictactoe';
 import toast from 'react-hot-toast';
+import { hapticFeedback } from '@/lib/utils/haptics';
+import confetti from 'canvas-confetti';
 
 type Player = 'X' | 'O' | null;
 
@@ -12,6 +15,9 @@ export default function TicTacToeGame() {
     const [xIsNext, setXIsNext] = useState(true);
     const [pairId, setPairId] = useState<string | null>(null);
     const [myPlayerSymbol, setMyPlayerSymbol] = useState<'X' | 'O' | null>(null);
+    const [myName, setMyName] = useState<string>('');
+    const [myId, setMyId] = useState<string | null>(null);
+    const [scores, setScores] = useState<any>(null);
     const [channel, setChannel] = useState<any>(null);
 
     const supabase = createBrowserClient(
@@ -20,16 +26,25 @@ export default function TicTacToeGame() {
     );
 
     useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user?.user_metadata?.display_name) {
+                setMyName(user.user_metadata.display_name);
+            }
+        });
         checkPairAction().then(res => {
             if (res.pair?.id) {
                 setPairId(res.pair.id);
-                // Simple deterministic assignment based on user IDs
-                const myId = res.userId || '';
+                const uid = res.userId || '';
+                setMyId(uid);
                 const p1 = res.pair.user1_id;
-                setMyPlayerSymbol(myId === p1 ? 'X' : 'O');
+                setMyPlayerSymbol(uid === p1 ? 'X' : 'O');
+
+                getTicTacToeScoreAction(res.pair.id).then(scoreRes => {
+                    if (scoreRes.scores) setScores(scoreRes.scores);
+                });
             }
         });
-    }, []);
+    }, [supabase]);
 
     useEffect(() => {
         if (!pairId) return;
@@ -37,14 +52,18 @@ export default function TicTacToeGame() {
             config: { broadcast: { ack: false } }
         });
 
-        ch.on('broadcast', { event: 'tictactoe_move' }, payload => {
+        ch.on('broadcast', { event: 'tictactoe_move' }, ({ payload }) => {
             setBoard(payload.board);
             setXIsNext(payload.xIsNext);
         });
 
-        ch.on('broadcast', { event: 'tictactoe_restart' }, () => {
+        ch.on('broadcast', { event: 'tictactoe_score' }, ({ payload }) => {
+            setScores(payload.scores);
+        });
+
+        ch.on('broadcast', { event: 'tictactoe_restart' }, ({ payload }) => {
             setBoard(Array(9).fill(null));
-            setXIsNext(true);
+            setXIsNext(payload?.xIsNext ?? true);
             toast("Игра началась заново 🔄", { icon: "🏁" });
         });
 
@@ -61,15 +80,18 @@ export default function TicTacToeGame() {
             [0, 4, 8], [2, 4, 6]
         ];
         for (const [a, b, c] of lines) {
-            if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) return squares[a];
+            if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+                return { winner: squares[a], line: [a, b, c] };
+            }
         }
-        return null;
+        return { winner: null, line: null };
     };
 
     const handleClick = (i: number) => {
-        if (calculateWinner(board) || board[i]) return;
+        hapticFeedback.light();
+        const { winner } = calculateWinner(board);
+        if (winner || board[i]) return;
 
-        // Prevent moving if it's not our turn
         const currentPlayerSymbol = xIsNext ? 'X' : 'O';
         if (myPlayerSymbol && myPlayerSymbol !== currentPlayerSymbol) {
             toast.error("Сейчас ход партнера!");
@@ -82,6 +104,30 @@ export default function TicTacToeGame() {
         setBoard(newBoard);
         setXIsNext(!xIsNext);
 
+        const newResult = calculateWinner(newBoard);
+        if (newResult.winner) {
+            hapticFeedback.success();
+            if (newResult.winner === myPlayerSymbol) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+            if (newResult.winner === myPlayerSymbol && pairId && myId) {
+                incrementTicTacToeScoreAction(pairId, myId).then(res => {
+                    if (res.scores && channel) {
+                        setScores(res.scores);
+                        channel.send({
+                            type: 'broadcast',
+                            event: 'tictactoe_score',
+                            payload: { scores: res.scores }
+                        });
+                    }
+                });
+            }
+        }
+
         if (channel) {
             channel.send({
                 type: 'broadcast',
@@ -92,17 +138,19 @@ export default function TicTacToeGame() {
     };
 
     const restartGame = () => {
+        const startX = Math.random() < 0.5; // random who goes first
         setBoard(Array(9).fill(null));
-        setXIsNext(true);
+        setXIsNext(startX);
         if (channel) {
             channel.send({
                 type: 'broadcast',
-                event: 'tictactoe_restart'
+                event: 'tictactoe_restart',
+                payload: { xIsNext: startX }
             });
         }
     };
 
-    const winner = calculateWinner(board);
+    const { winner, line } = calculateWinner(board);
     const isDraw = !winner && board.every(Boolean);
 
     let status;
@@ -115,28 +163,68 @@ export default function TicTacToeGame() {
         status = myPlayerSymbol === currentPlayerSymbol ? "Ваш ход!" : "Ожидаем ход партнера...";
     }
 
+    const showModal = winner || isDraw;
+
     return (
-        <div className="w-full flex justify-center items-center flex-col pt-4">
+        <div className="w-full flex justify-center items-center flex-col pt-4 relative">
+            {showModal && (
+                <div className="absolute inset-x-0 -inset-y-10 z-50 flex items-center justify-center bg-[#f2ebe3]/80 dark:bg-[#1a1614]/80 backdrop-blur-sm rounded-3xl">
+                    <div className="bg-[#fdfbf9] dark:bg-[#2c2623] p-8 w-full max-w-[280px] rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-[#e8dfd5] dark:border-[#3d332c] flex flex-col items-center animate-in zoom-in-95 duration-200">
+                        <span className="text-6xl mb-4 drop-shadow-sm">
+                            {winner === myPlayerSymbol ? '🎉' : isDraw ? '🤝' : '💔'}
+                        </span>
+                        <h2 className="text-2xl font-extrabold mb-6 text-center text-[#4a403b] dark:text-[#d4c8c1]">
+                            {winner === myPlayerSymbol ? 'Вы победили!' : isDraw ? 'Ничья!' : 'Партнер победил'}
+                        </h2>
+                        <button
+                            onClick={restartGame}
+                            className="w-full py-4 bg-[#cca573] hover:bg-[#b98b53] text-white rounded-2xl font-bold shadow-sm transition-transform active:scale-95 text-lg"
+                        >
+                            Сыграть еще раз
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <h2 className="text-xl font-bold mb-2">{status}</h2>
-            <p className="text-sm opacity-60 mb-8 tracking-widest uppercase font-bold">Вы играете за: {myPlayerSymbol}</p>
+            <p className="text-sm opacity-60 mb-8 tracking-widest uppercase font-bold">
+                Вы играете как: {myName || myPlayerSymbol}
+                {myName && <span className="ml-1 opacity-50">({myPlayerSymbol})</span>}
+            </p>
 
             <div className="grid grid-cols-3 gap-2 bg-[#e8dfd5] dark:bg-[#3d332c] p-2 rounded-3xl w-full max-w-[300px] aspect-square shadow-sm">
-                {board.map((cell, i) => (
-                    <button
-                        key={i}
-                        onClick={() => handleClick(i)}
-                        className="bg-[#fdfbf9] dark:bg-[#1a1614] rounded-2xl text-5xl font-extrabold flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#2d2621] active:scale-95"
-                    >
-                        <span className={cell === 'X' ? 'text-[#e07a5f]' : 'text-[#81b29a]'}>
-                            {cell}
-                        </span>
-                    </button>
-                ))}
+                {board.map((cell, i) => {
+                    const isWinningCell = line?.includes(i);
+                    return (
+                        <button
+                            key={i}
+                            onClick={() => handleClick(i)}
+                            className={`bg-[#fdfbf9] dark:bg-[#1a1614] rounded-2xl text-5xl font-extrabold flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#2d2621] active:scale-95 ${isWinningCell ? 'shadow-[0_0_15px_rgba(204,165,115,0.5)] scale-105 z-10 border-2 border-[#cca573] animate-pulse' : ''
+                                }`}
+                        >
+                            <span className={cell === 'X' ? 'text-[#e07a5f]' : 'text-[#81b29a]'}>
+                                {cell}
+                            </span>
+                        </button>
+                    )
+                })}
             </div>
+
+            {scores && (
+                <div className="mt-8 bg-[#fdfbf9] dark:bg-[#2c2623] px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-4 text-lg border border-[#e8dfd5] dark:border-[#3d332c] shadow-sm">
+                    <span className="text-[#e07a5f]">{myPlayerSymbol === 'X' ? myName || 'Вы' : 'Партнер'}</span>
+                    <div className="flex items-center gap-2 bg-[#e8dfd5] dark:bg-[#1a1614] px-4 py-1.5 rounded-full">
+                        <span>{scores.user1_score}</span>
+                        <span className="opacity-40 text-sm">:</span>
+                        <span>{scores.user2_score}</span>
+                    </div>
+                    <span className="text-[#81b29a]">{myPlayerSymbol === 'O' ? myName || 'Вы' : 'Партнер'}</span>
+                </div>
+            )}
 
             <button
                 onClick={restartGame}
-                className="mt-10 py-3 px-8 bg-[#cca573] hover:bg-[#b98b53] text-white rounded-full font-bold shadow-sm transition-colors"
+                className="mt-6 py-3 px-8 bg-[#cca573] hover:bg-[#b98b53] text-white rounded-full font-bold shadow-sm transition-colors"
             >
                 Начать заново
             </button>

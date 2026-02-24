@@ -60,3 +60,58 @@ export async function createMomentAction(formData: FormData) {
         return { error: "Внутренняя ошибка сервера" };
     }
 }
+
+export async function getTimeMachineMomentAction() {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { moment: null };
+
+        // For testing/quick results, let's just use 1 day ago. In a real app we'd use 30+ days.
+        const pastDate = new Date();
+        pastDate.setDate(pastDate.getDate() - 1);
+
+        const { data, error } = await supabase
+            .from('moments')
+            .select('*')
+            .lt('created_at', pastDate.toISOString())
+            .limit(50);
+
+        if (error || !data || data.length === 0) return { moment: null };
+
+        const randomMoment = data[Math.floor(Math.random() * data.length)];
+        return { moment: randomMoment };
+    } catch {
+        return { moment: null };
+    }
+}
+
+export async function toggleLikeMomentAction(id: string, liked: boolean) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Необходима авторизация" };
+    const { error } = await supabase.from('moments').update({ is_liked: liked }).eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath("/gallery");
+    return { success: true };
+}
+
+export async function toggleFavoriteMomentAction(id: string, favorited: boolean) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Необходима авторизация" };
+    const { error } = await supabase.from('moments').update({ is_favorited: favorited }).eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath("/gallery");
+    return { success: true };
+}
+
+export async function updateMomentCaptionAction(id: string, caption: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: "Необходима авторизация" };
+    const { error } = await supabase.from('moments').update({ caption: caption.trim() || null }).eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath("/gallery");
+    return { success: true };
+}

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { addWishlistItemAction, updateWishlistStatusAction } from '@/app/actions/wishlist';
 import { createBrowserClient } from '@supabase/ssr';
+import { hapticFeedback } from '@/lib/utils/haptics';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type WishItem = {
     id: string;
@@ -14,12 +16,15 @@ type WishItem = {
     tags: string[];
     is_hint: boolean;
     status: string;
+    category: string;
     user_id: string;
+    photo_url: string | null;
 };
 
 export default function WishlistView() {
     const [items, setItems] = useState<WishItem[]>([]);
     const [isAdding, setIsAdding] = useState(false);
+    const [myUserId, setMyUserId] = useState<string | null>(null);
 
     // Form state
     const [title, setTitle] = useState('');
@@ -27,7 +32,12 @@ export default function WishlistView() {
     const [price, setPrice] = useState('');
     const [tags, setTags] = useState('');
     const [isHint, setIsHint] = useState(false);
+    const [category, setCategory] = useState('general');
+    const [activeTab, setActiveTab] = useState('all');
     const [loading, setLoading] = useState(false);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const photoInputRef = useRef<HTMLInputElement>(null);
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +46,9 @@ export default function WishlistView() {
 
     useEffect(() => {
         const fetchItems = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) setMyUserId(user.id);
+
             const { data } = await supabase
                 .from('wishlist')
                 .select('*')
@@ -64,7 +77,9 @@ export default function WishlistView() {
         formData.append('link', link);
         formData.append('price', price);
         formData.append('tags', tags);
+        formData.append('category', category);
         if (isHint) formData.append('isHint', 'on');
+        if (photoFile) formData.append('photo', photoFile);
 
         const res = await addWishlistItemAction(formData);
 
@@ -72,7 +87,8 @@ export default function WishlistView() {
             toast.error(res.error, { id: toastId });
         } else {
             toast.success('Желание добавлено! 🎁', { id: toastId });
-            setTitle(''); setLink(''); setPrice(''); setTags(''); setIsHint(false);
+            setTitle(''); setLink(''); setPrice(''); setTags(''); setIsHint(false); setCategory('general');
+            setPhotoFile(null); setPhotoPreview(null);
             setIsAdding(false);
         }
         setLoading(false);
@@ -86,11 +102,33 @@ export default function WishlistView() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center mt-6">
-            <h2 className="text-3xl font-extrabold mb-6">Вишлист 🎁</h2>
+            <h2 className="text-3xl font-extrabold mb-4">Вишлист 🎁</h2>
+
+            {/* Tabs */}
+            <div className="w-full flex flex-wrap gap-2 pb-4 mb-2 px-1">
+                {[
+                    { id: 'all', label: 'Всё ✨' },
+                    { id: 'general', label: 'Общее 🏡' },
+                    { id: 'hers', label: 'Для Неё 👩' },
+                    { id: 'his', label: 'Для Него 👨' },
+                    { id: 'gifted', label: 'Куплено 🛍️' }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => { hapticFeedback.light(); setActiveTab(tab.id); }}
+                        className={`px-3 py-1.5 rounded-2xl font-bold text-sm whitespace-nowrap transition-colors border-2 ${activeTab === tab.id
+                            ? 'bg-[#cca573] border-[#cca573] text-white'
+                            : 'bg-transparent border-[#e3d2b3] dark:border-[#55331a] text-[#cca573] opacity-70 hover:opacity-100'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
             {!isAdding && (
                 <button
-                    onClick={() => setIsAdding(true)}
+                    onClick={() => { hapticFeedback.light(); setIsAdding(true); }}
                     className="w-full py-4 mb-6 bg-[#cca573] hover:bg-[#b98b53] text-white rounded-3xl font-bold text-lg shadow-sm active:scale-95 transition-all"
                 >
                     + Добавить хотелку
@@ -106,7 +144,52 @@ export default function WishlistView() {
                         <input value={tags} onChange={e => setTags(e.target.value)} placeholder="Теги (дом, уют)" className="w-1/2 p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
                     </div>
 
-                    <label className="flex items-center gap-3 cursor-pointer p-2 opacity-90">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold uppercase tracking-wider opacity-60 pl-1">Категория</label>
+                        <select
+                            value={category}
+                            onChange={e => setCategory(e.target.value)}
+                            className="p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none font-bold text-[#4a403b] dark:text-[#d4c8c1] appearance-none"
+                        >
+                            <option value="general">Общее 🏡</option>
+                            <option value="hers">Для Неё 👩</option>
+                            <option value="his">Для Него 👨</option>
+                        </select>
+                    </div>
+
+                    {/* Photo picker */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold uppercase tracking-wider opacity-60 pl-1">Фото (необязательно)</label>
+                        <input
+                            ref={photoInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                                const f = e.target.files?.[0] || null;
+                                setPhotoFile(f);
+                                if (f) setPhotoPreview(URL.createObjectURL(f));
+                                else setPhotoPreview(null);
+                            }}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => photoInputRef.current?.click()}
+                            className="w-full rounded-xl border-2 border-dashed border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] flex items-center justify-center overflow-hidden transition-colors hover:border-[#cca573]"
+                            style={{ minHeight: 80 }}
+                        >
+                            {photoPreview ? (
+                                <div className="relative w-full h-32">
+                                    <Image src={photoPreview} alt="Preview" fill className="object-cover" />
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setPhotoFile(null); setPhotoPreview(null); }} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button>
+                                </div>
+                            ) : (
+                                <span className="text-sm text-[#9e6b36] dark:text-[#cca573] font-bold opacity-60">📸 Добавить фото</span>
+                            )}
+                        </button>
+                    </div>
+
+                    <label className="flex items-center gap-3 cursor-pointer p-2 opacity-90 mt-1">
                         <input type="checkbox" checked={isHint} onChange={e => setIsHint(e.target.checked)} className="w-5 h-5 accent-[#b98b53] rounded" />
                         <span className="font-semibold text-sm">Это тонкий намек 😏</span>
                     </label>
@@ -119,15 +202,27 @@ export default function WishlistView() {
             )}
 
             <div className="w-full flex flex-col gap-4">
-                {items.length === 0 && !isAdding && (
-                    <div className="w-full flex flex-col items-center justify-center py-12 text-center opacity-70">
-                        <span className="text-7xl drop-shadow-sm mb-4">🧸</span>
-                        <p className="font-bold text-lg text-[#4a403b] dark:text-[#d4c8c1]">Вишлист пуст</p>
-                        <p className="text-sm text-[#4a403b]/80 dark:text-[#d4c8c1]/80 mt-1">Добавьте сюда свои заветные желания! ✨</p>
-                    </div>
-                )}
+                {items.filter(i => {
+                    if (activeTab === 'gifted') return i.status === 'gifted';
+                    if (i.status === 'gifted') return false;
+                    if (activeTab === 'all') return true;
+                    return i.category === activeTab;
+                }).length === 0 && !isAdding && (
+                        <div className="w-full flex flex-col items-center justify-center py-12 text-center opacity-70">
+                            <span className="text-7xl drop-shadow-sm mb-4">🧸</span>
+                            <p className="font-bold text-lg text-[#4a403b] dark:text-[#d4c8c1]">Пустовато...</p>
+                            <p className="text-sm text-[#4a403b]/80 dark:text-[#d4c8c1]/80 mt-1">
+                                {activeTab === 'gifted' ? 'Пока ничего не подарено!' : 'Добавьте сюда свои заветные желания! ✨'}
+                            </p>
+                        </div>
+                    )}
 
-                {items.map(item => (
+                {items.filter(i => {
+                    if (activeTab === 'gifted') return i.status === 'gifted';
+                    if (i.status === 'gifted') return false;
+                    if (activeTab === 'all') return true;
+                    return i.category === activeTab;
+                }).map(item => (
                     <div key={item.id} className={`p-5 rounded-3xl border-2 transition-all flex flex-col gap-1 ${item.status === 'gifted' ? 'bg-[#f0f9f0] dark:bg-[#203320] border-[#a3d9a3] opacity-60' : item.is_hint ? 'bg-[#fff5f8] dark:bg-[#3d262d] border-[#ffcce0] dark:border-[#8f4f66]' : 'bg-white dark:bg-[#2d2621] border-[#e3d2b3] dark:border-[#55331a]'}`}>
                         <div className="flex justify-between items-start mb-1">
                             <h3 className="text-xl font-bold font-serif leading-tight pr-2">{item.title} {item.is_hint && '😏'}</h3>
@@ -139,19 +234,50 @@ export default function WishlistView() {
                             </button>
                         </div>
 
-                        {item.price && <p className="font-bold text-[#b98b53]">{item.price}</p>}
-
-                        {item.tags && item.tags.length > 0 && (
-                            <div className="flex gap-2 flex-wrap mt-1 mb-1">
-                                {item.tags.map(t => <span key={t} className="text-xs px-2 py-1 bg-black/5 dark:bg-white/10 rounded-lg font-medium opacity-80">#{t}</span>)}
+                        {/* Photo */}
+                        {item.photo_url && (
+                            <div className="relative w-full h-48 rounded-2xl overflow-hidden mb-2">
+                                <Image src={item.photo_url} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 400px" />
                             </div>
                         )}
 
-                        {item.link && (
-                            <a href={item.link} target="_blank" rel="noreferrer" className="text-sm underline text-blue-600 dark:text-blue-400 mt-1 self-start">
-                                Ссылка на мечту
-                            </a>
-                        )}
+                        <details className="mt-1 group cursor-pointer">
+                            <summary className="text-sm text-[#9e6b36] dark:text-[#cca573] font-bold opacity-80 hover:opacity-100 list-none flex items-center gap-2 select-none">
+                                <span className="text-xs group-open:rotate-180 transition-transform duration-300">▼</span> Открыть детали
+                            </summary>
+                            <div className="pt-3 flex flex-col gap-2 cursor-auto">
+                                {item.price && <p className="font-bold text-[#b98b53]">Цена: {item.price}</p>}
+
+                                {item.tags && item.tags.length > 0 && (
+                                    <div className="flex gap-2 flex-wrap">
+                                        {item.tags.map(t => <span key={t} className="text-xs px-2 py-1 bg-black/5 dark:bg-white/10 rounded-lg font-medium opacity-80">#{t}</span>)}
+                                    </div>
+                                )}
+
+                                {item.link && (
+                                    <a href={item.link} target="_blank" rel="noreferrer" className="text-sm underline text-blue-600 dark:text-blue-400 self-start mt-1">
+                                        🔗 Ссылка на местечко/товар
+                                    </a>
+                                )}
+
+                                {myUserId === item.user_id && (
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm("Точно удалить это желание?")) {
+                                                const { deleteWishlistItemAction } = await import('@/app/actions/delete');
+                                                const toastId = toast.loading('Удаляем...');
+                                                const res = await deleteWishlistItemAction(item.id);
+                                                if (res.error) toast.error(res.error, { id: toastId });
+                                                else toast.success('Удалено!', { id: toastId });
+                                            }
+                                        }}
+                                        className="text-xs font-bold text-red-400 hover:text-red-500 opacity-60 hover:opacity-100 self-start mt-3"
+                                    >
+                                        🗑️ Удалить желание
+                                    </button>
+                                )}
+                            </div>
+                        </details>
                     </div>
                 ))}
             </div>

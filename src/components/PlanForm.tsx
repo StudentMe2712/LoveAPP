@@ -7,6 +7,7 @@ import { createPlanAction } from '@/app/actions/plans';
 export default function PlanForm({ onCancel }: { onCancel: () => void }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [targetDate, setTargetDate] = useState('');
     const [slots, setSlots] = useState<string[]>(['']);
     const [loading, setLoading] = useState(false);
 
@@ -31,6 +32,7 @@ export default function PlanForm({ onCancel }: { onCancel: () => void }) {
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
+        if (targetDate) formData.append('target_date', targetDate);
         slots.forEach(slot => {
             if (slot.trim()) formData.append('suggested_slots', slot);
         });
@@ -43,6 +45,7 @@ export default function PlanForm({ onCancel }: { onCancel: () => void }) {
             toast.success('План предложен! 🗓️', { id: toastId });
             setTitle('');
             setDescription('');
+            setTargetDate('');
             setSlots(['']);
             onCancel();
         }
@@ -58,6 +61,17 @@ export default function PlanForm({ onCancel }: { onCancel: () => void }) {
                 placeholder="Что будем делать?"
                 className="p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none"
             />
+
+            <div className="flex gap-2 w-full">
+                <input
+                    type="date"
+                    value={targetDate}
+                    onChange={e => setTargetDate(e.target.value)}
+                    className="p-3 w-1/2 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none"
+                    placeholder="Дата (опционально)"
+                />
+            </div>
+
             <textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}

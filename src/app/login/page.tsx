@@ -15,16 +15,22 @@ export default function LoginPage() {
         if (!username || !password) return;
 
         setLoading(true);
-        const toastId = toast.loading("Отправляем волшебную ссылку...");
+        const toastId = toast.loading("Авторизация...");
 
-        const res = await signInWithPasswordAction(username, password);
+        try {
+            const res = await signInWithPasswordAction(username, password);
 
-        if (res?.error) {
-            toast.error(res.error, { id: toastId });
+            if (res?.error) {
+                toast.error(res.error, { id: toastId });
+                setLoading(false);
+            } else {
+                toast.success("Успешный вход! 🏡", { id: toastId });
+                window.location.href = '/';
+            }
+        } catch (err: any) {
+            console.error("Login failure", err);
+            toast.error(err.message || "Произошла непредвиденная ошибка на сервере", { id: toastId });
             setLoading(false);
-        } else {
-            toast.success("Успешный вход! 🏡", { id: toastId });
-            window.location.href = '/';
         }
     }
 

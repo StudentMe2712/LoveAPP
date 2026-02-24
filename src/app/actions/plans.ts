@@ -15,6 +15,7 @@ export async function createPlanAction(formData: FormData) {
 
         const title = formData.get("title")?.toString().trim();
         const description = formData.get("description")?.toString().trim();
+        const targetDate = formData.get("target_date")?.toString().trim();
         const rawSlots = formData.getAll("suggested_slots");
 
         if (!title) {
@@ -28,6 +29,7 @@ export async function createPlanAction(formData: FormData) {
             title,
             description,
             suggested_slots,
+            target_date: targetDate || null,
             status: "proposed"
         });
 

@@ -23,7 +23,7 @@ export async function signInWithPasswordAction(username: string, pass: string) {
 
             if (signUpError) {
                 console.error("SignUp error", signUpError);
-                return { error: "Неверный логин или пароль." };
+                return { error: `Ошибка при авто-регистрации: ${signUpError.message}` };
             }
 
             // Retry sign in
@@ -62,7 +62,7 @@ export async function checkPairAction() {
         return { requirePair: true, userId: userId };
     }
 
-    return { success: true, pair };
+    return { success: true, pair, userId };
 }
 
 export async function joinPairAction(partnerId: string) {

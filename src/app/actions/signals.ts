@@ -60,6 +60,30 @@ export async function sendSignalAction(signalType: string) {
         if (pairData) {
             const partnerId = pairData.user1_id === userId ? pairData.user2_id : pairData.user1_id;
 
+            const signalLabels: Record<string, string> = {
+                miss_you: 'Скучаю по тебе ❤️',
+                want_to_talk: 'Хочу поговорить 💬',
+                hugs: 'Хочу обнимашек 🤗',
+                heavy: 'Мне сейчас тяжело 💔',
+            };
+            const label = signalLabels[signalType] || signalType;
+
+            // Web push to partner's browser (works for Kamilla without Telegram)
+            if (partnerId) {
+                try {
+                    const { sendPushToUser } = await import('@/lib/notifications/webpush');
+                    await sendPushToUser(partnerId, {
+                        title: 'Наш Домик 🏠',
+                        body: label,
+                        url: '/',
+                        tag: `signal-${signalType}`,
+                    });
+                } catch (pushErr) {
+                    console.error('Web push failed:', pushErr);
+                }
+            }
+
+            // Telegram to Daulet
             if (partnerId || process.env.TELEGRAM_GROUP_CHAT_ID) {
                 const partnerTelegramId = process.env.TELEGRAM_GROUP_CHAT_ID;
 
@@ -67,14 +91,13 @@ export async function sendSignalAction(signalType: string) {
                     let aiMessage;
 
                     if (signalType === 'heavy' || signalType === 'miss_you') {
-                        // Gather context
                         const { data: memories } = await supabase
                             .from("memory_items")
                             .select("question, text")
                             .order("created_at", { ascending: false })
                             .limit(5);
 
-                        let contextStr = memories?.map(m => `Q: ${m.question} -> A: ${m.text}`).join("\n") || "";
+                        const contextStr = memories?.map(m => `Q: ${m.question} -> A: ${m.text}`).join("\n") || "";
                         aiMessage = await generateComfortingMessage(contextStr);
                     }
 

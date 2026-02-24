@@ -103,7 +103,7 @@ export default function MomentsFeed() {
                                 {moment.caption || 'Нажми, чтобы обновить момент!'}
                             </p>
                             <button disabled className="bg-[#a3948c]/20 text-[#6b5c54] dark:text-[#d4c8c1] text-xs px-4 py-1.5 rounded-full self-start font-bold flex items-center gap-1 pointer-events-none">
-                                ▶ Послушать
+                                📸 + Загрузить
                             </button>
                         </div>
                     </>

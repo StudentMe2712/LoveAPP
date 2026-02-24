@@ -70,6 +70,7 @@ export async function updateProfileAvatarAction(formData: FormData) {
 
     const file = formData.get('avatar') as File;
     const displayName = formData.get('displayName') as string;
+    const anniversaryDate = formData.get('anniversaryDate') as string;
 
     let finalAvatarUrl = user?.user_metadata?.avatar_url;
 
@@ -96,7 +97,8 @@ export async function updateProfileAvatarAction(formData: FormData) {
     const { error } = await supabase.auth.updateUser({
         data: {
             display_name: displayName || user?.user_metadata?.display_name,
-            avatar_url: finalAvatarUrl
+            avatar_url: finalAvatarUrl,
+            anniversary_date: anniversaryDate !== undefined ? anniversaryDate : user?.user_metadata?.anniversary_date
         }
     });
 

@@ -5,13 +5,33 @@ import { exportDataAction, deleteDataAction, updateProfileAvatarAction } from '@
 import { createBrowserClient } from '@supabase/ssr';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import PushNotificationToggle from '@/components/PushNotificationToggle';
+import ThemePicker from '@/components/ThemePicker';
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [displayName, setDisplayName] = useState('');
+    const [userEmail, setUserEmail] = useState('');
+    const [anniversaryDate, setAnniversaryDate] = useState('');
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Smart notification settings
+    const [morningEnabled, setMorningEnabled] = useState(false);
+    const [morningTime, setMorningTime] = useState('08:00');
+    const [inactivityEnabled, setInactivityEnabled] = useState(false);
+
+    useEffect(() => {
+        setMorningEnabled(localStorage.getItem('notif_morning') === 'true');
+        setMorningTime(localStorage.getItem('notif_morning_time') || '08:00');
+        setInactivityEnabled(localStorage.getItem('notif_inactivity') === 'true');
+    }, []);
+
+    const saveNotifSettings = (key: string, val: string) => {
+        localStorage.setItem(key, val);
+        toast.success('Настройки сохранены ✓', { duration: 1200 });
+    };
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,9 +41,13 @@ export default function SettingsPage() {
     useEffect(() => {
         const fetchProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (user?.user_metadata) {
-                setDisplayName(user.user_metadata.display_name || '');
-                setAvatarPreview(user.user_metadata.avatar_url || null);
+            if (user) {
+                setUserEmail(user.email || '');
+                if (user.user_metadata) {
+                    setDisplayName(user.user_metadata.display_name || '');
+                    setAvatarPreview(user.user_metadata.avatar_url || null);
+                    setAnniversaryDate(user.user_metadata.anniversary_date || '');
+                }
             }
         };
         fetchProfile();
@@ -36,6 +60,7 @@ export default function SettingsPage() {
 
         const formData = new FormData();
         formData.append('displayName', displayName);
+        formData.append('anniversaryDate', anniversaryDate);
         const file = fileInputRef.current?.files?.[0];
         if (file) {
             formData.append('avatar', file);
@@ -112,7 +137,70 @@ export default function SettingsPage() {
                 <div className="w-8"></div> {/* Spacer for centering */}
             </header>
 
-            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-[2px] border-[#e8dfd5] dark:border-[#3d332c] flex flex-col gap-8">
+            <PushNotificationToggle />
+
+            {/* ── Theme Picker ── */}
+            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] mb-4">
+                <ThemePicker />
+            </section>
+
+            {/* ── Smart Notifications ── */}
+            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] mb-4 flex flex-col gap-5">
+                <h3 className="text-xs font-black uppercase tracking-widest opacity-50 text-[#4a403b] dark:text-[#d4c8c1]">🔔 Умные уведомления</h3>
+
+                {/* Morning greeting */}
+                <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                        <p className="font-bold text-sm text-[#4a403b] dark:text-[#d4c8c1]">☀️ Утреннее «доброе утро»</p>
+                        <p className="text-xs opacity-50 mt-0.5">Push-уведомление каждый день утром</p>
+                        {morningEnabled && (
+                            <input
+                                type="time"
+                                value={morningTime}
+                                onChange={e => {
+                                    setMorningTime(e.target.value);
+                                    saveNotifSettings('notif_morning_time', e.target.value);
+                                }}
+                                className="mt-2 p-2 rounded-xl border-2 border-[#e8dfd5] dark:border-[#3d332c] bg-[#fdfbf9] dark:bg-[#1f1a16] text-sm font-bold outline-none focus:border-[#cca573] text-[#4a403b] dark:text-[#d4c8c1]"
+                            />
+                        )}
+                    </div>
+                    <button
+                        onClick={() => {
+                            const next = !morningEnabled;
+                            setMorningEnabled(next);
+                            saveNotifSettings('notif_morning', String(next));
+                        }}
+                        className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${morningEnabled ? 'bg-[#cca573]' : 'bg-[#e8dfd5] dark:bg-[#3d332c]'
+                            }`}
+                    >
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${morningEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                            }`} />
+                    </button>
+                </div>
+
+                {/* Inactivity nudge */}
+                <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                        <p className="font-bold text-sm text-[#4a403b] dark:text-[#d4c8c1]">💌 «Давно не заходил»</p>
+                        <p className="text-xs opacity-50 mt-0.5">Напомнит написать партнёру если давно не был</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            const next = !inactivityEnabled;
+                            setInactivityEnabled(next);
+                            saveNotifSettings('notif_inactivity', String(next));
+                        }}
+                        className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${inactivityEnabled ? 'bg-[#cca573]' : 'bg-[#e8dfd5] dark:bg-[#3d332c]'
+                            }`}
+                    >
+                        <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${inactivityEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                            }`} />
+                    </button>
+                </div>
+            </section>
+
+            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] flex flex-col gap-8">
                 <div>
                     <h2 className="text-lg font-bold mb-4">👤 Ваш профиль</h2>
                     <form onSubmit={handleProfileUpdate} className="flex flex-col gap-4">
@@ -143,9 +231,20 @@ export default function SettingsPage() {
                                     value={displayName}
                                     onChange={e => setDisplayName(e.target.value)}
                                     placeholder="Например, Камилла"
-                                    className="w-full p-3 rounded-xl border-2 border-[#e8dfd5] dark:border-[#3d332c] bg-[#fdfbf9] dark:bg-[#1f1a16] focus:border-[#cca573] outline-none font-bold"
+                                    className="w-full p-3 rounded-xl border-2 border-[#e8dfd5] dark:border-[#3d332c] bg-[#fdfbf9] dark:bg-[#1f1a16] focus:border-[#cca573] outline-none font-bold mb-2"
                                 />
+                                {userEmail && <p className="text-xs opacity-50 px-2 font-medium">Вы вошли как: {userEmail}</p>}
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="text-xs opacity-60 font-bold uppercase tracking-wider pl-1 mb-1 block">Дата начала отношений (для таймера)</label>
+                            <input
+                                type="date"
+                                value={anniversaryDate}
+                                onChange={e => setAnniversaryDate(e.target.value)}
+                                className="w-full p-3 rounded-xl border-2 border-[#e8dfd5] dark:border-[#3d332c] bg-[#fdfbf9] dark:bg-[#1f1a16] focus:border-[#cca573] outline-none font-bold text-[#4a403b] dark:text-[#d4c8c1]"
+                            />
                         </div>
                         <button
                             type="submit"

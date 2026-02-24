@@ -3,43 +3,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { generateHomeInsight } from "@/lib/ai";
 
+const quotes = [
+    "Любовь — это когда хочешь переживать с кем-то все четыре времени года.",
+    "Самое большое счастье в жизни — уверенность, что тебя любят.",
+    "Счастье — это когда дома уютно, тепло и спокойно. И так же — в душе.",
+    "Идеальные отношения — это когда вы ссоритесь как пара, болтаете как лучшие друзья и заботитесь друг о друге.",
+    "Совет дня: Обнимите партнера без повода. Просто так. Крепко и долго.",
+    "Напоминание: Сказать «Я тебя люблю» можно и без слов. Сварите кофе, укройте пледом.",
+    "Секрет долгих отношений: Никогда не прекращайте ходить на свидания друг с другом.",
+    "Любить — значит видеть чудо, невидимое для других.",
+    "Держитесь за руки чаще. Это простой жест, но он творит чудеса.",
+    "Совет дня: Если партнер устал, иногда лучшая помощь — просто выслушать и обнять.",
+    "Настоящая любовь выдерживает долгие годы близости и делает их только лучше.",
+    "В отношениях старайтесь отражать только лучшее в своем партнере.",
+    "Каждый день ищите маленький повод для совместной улыбки.",
+    "Смех — самый короткий путь между двумя людьми.",
+    "Любить — значит вместе смотреть в одном направлении.",
+    "Совет дня: Похвалите партнера за мелочь, которую он делает каждый день.",
+    "Иногда лучший разговор — это уютное совместное молчание.",
+    "Не забывайте говорить «Спасибо» даже за привычные домашние дела.",
+    "Отношения — это когда вы учитесь видеть неидеального человека идеальным.",
+    "Совет дня: Отложите телефоны во время совместного ужина.",
+    "Любовь — это не то, с кем ты можешь жить, а то, без кого ты жить не можешь.",
+    "Лучшее, за что можно держаться в жизни, - это друг за друга.",
+    "Уважение — это фундамент, на котором строится любое сильное чувство.",
+    "Маленькие сюрпризы сохраняют большую любовь.",
+    "Вместе даже самые обычные дела становятся особенными."
+];
+
 export async function fetchAIInsightAction() {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            const insight = await generateHomeInsight("Recent Context:\n(User not authenticated, using default prompt)");
-            return { data: insight };
-        }
-        // Gather context
-        // 1. Recent signals
-        const { data: signals } = await supabase
-            .from("signals")
-            .select("type, created_at, sender_id")
-            .order("created_at", { ascending: false })
-            .limit(5);
-
-        // 2. Recent memory vault items
-        const { data: memories } = await supabase
-            .from("memory_items")
-            .select("question, text")
-            .order("created_at", { ascending: false })
-            .limit(3);
-
-        let contextBuilder = "Recent Context:\n";
-
-        if (signals && signals.length > 0) {
-            contextBuilder += "Signals: " + signals.map(s => `${s.type === 'miss_you' ? 'Скучаю' : s.type === 'heavy' ? 'Мне тяжело' : s.type} (${new Date(s.created_at).toLocaleDateString()})`).join(", ") + "\n";
-        }
-
-        if (memories && memories.length > 0) {
-            contextBuilder += "Memories/Answers: " + memories.map(m => `Q: ${m.question} -> A: ${m.text}`).join(" | ") + "\n";
-        }
-
-        const insight = await generateHomeInsight(contextBuilder);
-
-        return { data: insight };
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        return { data: { text: randomQuote } };
     } catch (err) {
         console.error("fetchAIInsightAction exception", err);
         return { error: "Ошибка генерации инсайта" };
