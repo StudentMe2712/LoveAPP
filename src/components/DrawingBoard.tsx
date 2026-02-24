@@ -33,7 +33,7 @@ export default function DrawingBoard() {
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) {
                 setMyId(user.id);
-                setMyName(user.user_metadata?.display_name || 'Партнер');
+                setMyName(user.user_metadata?.display_name || 'Вы');
                 myColorRef.current = colors[parseInt(user.id.substring(0, 8), 16) % colors.length] || '#e07a5f';
             }
         });

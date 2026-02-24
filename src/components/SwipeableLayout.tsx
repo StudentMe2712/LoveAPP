@@ -1,40 +1,49 @@
 "use client";
 
 import React from 'react';
-import { useSwipeable } from 'react-swipeable';
+import { SwipeEventData, useSwipeable } from 'react-swipeable';
 import { useRouter, usePathname } from 'next/navigation';
 
 const ROUTES = [
     '/',
-    '/plans',
     '/wishlist',
-    '/gallery',
-    '/settings'
+    '/journey',
+    '/plans',
+    '/spicy',
 ];
 
 export default function SwipeableLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
+    const currentIndex = ROUTES.indexOf(pathname);
+    const isSwipeEnabled = currentIndex !== -1;
+
+    const shouldHandleSwipe = (eventData: SwipeEventData) => {
+        if (!isSwipeEnabled) return false;
+        if (eventData.absX < 64) return false;
+        return eventData.absX > eventData.absY * 1.35;
+    };
 
     const handlers = useSwipeable({
-        onSwipedLeft: () => {
-            const currentIndex = ROUTES.indexOf(pathname);
-            if (currentIndex !== -1 && currentIndex < ROUTES.length - 1) {
+        onSwipedLeft: (eventData) => {
+            if (!shouldHandleSwipe(eventData)) return;
+            if (currentIndex < ROUTES.length - 1) {
                 router.push(ROUTES[currentIndex + 1]);
             }
         },
-        onSwipedRight: () => {
-            const currentIndex = ROUTES.indexOf(pathname);
-            if (currentIndex !== -1 && currentIndex > 0) {
+        onSwipedRight: (eventData) => {
+            if (!shouldHandleSwipe(eventData)) return;
+            if (currentIndex > 0) {
                 router.push(ROUTES[currentIndex - 1]);
             }
         },
+        delta: 28,
         preventScrollOnSwipe: false,
         trackMouse: false // Only touch events
     });
 
     return (
-        <div {...handlers} className="w-full min-h-screen">
+        <div {...(isSwipeEnabled ? handlers : {})} className="w-full min-h-screen">
             {children}
         </div>
     );

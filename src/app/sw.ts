@@ -10,9 +10,11 @@ declare global {
 }
 
 declare const self: ServiceWorkerGlobalScope;
+const isTunnelHost = self.location.hostname.endsWith("trycloudflare.com");
 
 const serwist = new Serwist({
-    precacheEntries: self.__SW_MANIFEST || [],
+    // Tunnel host changes very often; disable precache there to avoid stale hash 404s.
+    precacheEntries: isTunnelHost ? [] : (self.__SW_MANIFEST || []),
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
@@ -20,6 +22,15 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+if (isTunnelHost) {
+    self.addEventListener("activate", (event) => {
+        event.waitUntil((async () => {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+        })());
+    });
+}
 
 // Handle incoming web push notifications
 self.addEventListener('push', (event) => {

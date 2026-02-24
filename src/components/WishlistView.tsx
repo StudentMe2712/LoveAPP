@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { addWishlistItemAction, updateWishlistStatusAction } from '@/app/actions/wishlist';
 import { createBrowserClient } from '@supabase/ssr';
@@ -21,6 +21,21 @@ type WishItem = {
     photo_url: string | null;
 };
 
+function normalizeWishItem(raw: Partial<WishItem>): WishItem {
+    return {
+        id: raw.id || `temp-${Date.now()}`,
+        title: raw.title || '',
+        link: raw.link || null,
+        price: raw.price || null,
+        tags: Array.isArray(raw.tags) ? raw.tags.filter(Boolean) : [],
+        is_hint: !!raw.is_hint,
+        status: raw.status || 'wanted',
+        category: raw.category || 'general',
+        user_id: raw.user_id || '',
+        photo_url: raw.photo_url || null,
+    };
+}
+
 export default function WishlistView() {
     const [items, setItems] = useState<WishItem[]>([]);
     const [isAdding, setIsAdding] = useState(false);
@@ -37,40 +52,59 @@ export default function WishlistView() {
     const [loading, setLoading] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [deletingItemIds, setDeletingItemIds] = useState<Record<string, boolean>>({});
     const photoInputRef = useRef<HTMLInputElement>(null);
 
-    const supabase = createBrowserClient(
+    const supabase = useMemo(() => createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    ), []);
+
+    const fetchItems = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) setMyUserId(user.id);
+
+        const { data } = await supabase
+            .from('wishlist')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (data) setItems((data as WishItem[]).map(normalizeWishItem));
+    }, [supabase]);
 
     useEffect(() => {
-        const fetchItems = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) setMyUserId(user.id);
-
-            const { data } = await supabase
-                .from('wishlist')
-                .select('*')
-                .order('created_at', { ascending: false });
-            if (data) setItems(data as WishItem[]);
-        };
-        fetchItems();
+        void fetchItems();
 
         const channel = supabase
             .channel('wishlist_feed')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'wishlist' }, () => {
-                fetchItems(); // simple refetch on any change for MVPs
+                void fetchItems();
             })
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
-    }, [supabase]);
+    }, [fetchItems, supabase]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading) return;
+
         setLoading(true);
         const toastId = toast.loading('Добавляем желание...');
+
+        const optimisticId = `temp-${Date.now()}`;
+        const optimisticItem: WishItem = normalizeWishItem({
+            id: optimisticId,
+            title: title.trim(),
+            link: link.trim() || null,
+            price: price.trim() || null,
+            tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+            is_hint: isHint,
+            status: 'wanted',
+            category,
+            user_id: myUserId || '',
+            photo_url: photoPreview,
+        });
+        setItems(prev => [optimisticItem, ...prev]);
 
         const formData = new FormData();
         formData.append('title', title);
@@ -84,8 +118,17 @@ export default function WishlistView() {
         const res = await addWishlistItemAction(formData);
 
         if (res.error) {
+            setItems(prev => prev.filter(item => item.id !== optimisticId));
             toast.error(res.error, { id: toastId });
         } else {
+            if (res.item) {
+                const normalized = normalizeWishItem(res.item as Partial<WishItem>);
+                setItems(prev => prev.map(item => item.id === optimisticId ? normalized : item));
+            } else {
+                setItems(prev => prev.filter(item => item.id !== optimisticId));
+                void fetchItems();
+            }
+
             toast.success('Желание добавлено! 🎁', { id: toastId });
             setTitle(''); setLink(''); setPrice(''); setTags(''); setIsHint(false); setCategory('general');
             setPhotoFile(null); setPhotoPreview(null);
@@ -98,6 +141,56 @@ export default function WishlistView() {
         const nextStatus = currentStatus === 'wanted' ? 'reserved' : currentStatus === 'reserved' ? 'gifted' : 'wanted';
         await updateWishlistStatusAction(id, nextStatus);
         toast.success(`Статус обновлен на: ${nextStatus}`);
+    };
+
+    const handleDeleteItem = async (item: WishItem) => {
+        if (deletingItemIds[item.id]) return;
+        if (!confirm('Точно удалить это желание?')) return;
+
+        setDeletingItemIds(prev => ({ ...prev, [item.id]: true }));
+
+        let removedItem: WishItem | null = null;
+        let removedIndex = -1;
+
+        setItems(prev => {
+            removedIndex = prev.findIndex(wish => wish.id === item.id);
+            if (removedIndex === -1) return prev;
+            removedItem = prev[removedIndex];
+            return prev.filter(wish => wish.id !== item.id);
+        });
+
+        const rollbackRemove = () => {
+            if (!removedItem) return;
+            setItems(prev => {
+                if (prev.some(wish => wish.id === removedItem!.id)) return prev;
+                const next = [...prev];
+                const insertAt = removedIndex >= 0 && removedIndex <= next.length ? removedIndex : next.length;
+                next.splice(insertAt, 0, removedItem!);
+                return next;
+            });
+        };
+
+        const toastId = toast.loading('Удаляем...');
+        try {
+            const { deleteWishlistItemAction } = await import('@/app/actions/delete');
+            const res = await deleteWishlistItemAction(item.id);
+            if (res.error) {
+                rollbackRemove();
+                toast.error(res.error, { id: toastId });
+                return;
+            }
+            toast.success('Удалено!', { id: toastId });
+            void fetchItems();
+        } catch {
+            rollbackRemove();
+            toast.error('Не удалось удалить желание', { id: toastId });
+        } finally {
+            setDeletingItemIds(prev => {
+                const next = { ...prev };
+                delete next[item.id];
+                return next;
+            });
+        }
     };
 
     return (
@@ -140,7 +233,7 @@ export default function WishlistView() {
                     <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Что хочется?" className="p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
                     <input value={link} onChange={e => setLink(e.target.value)} placeholder="Ссылка (необязательно)" type="url" className="p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
                     <div className="flex gap-4">
-                        <input value={price} onChange={e => setPrice(e.target.value)} placeholder="Цена (~1000₽)" className="w-1/2 p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
+                        <input value={price} onChange={e => setPrice(e.target.value)} placeholder="Цена (~1000₸)" className="w-1/2 p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
                         <input value={tags} onChange={e => setTags(e.target.value)} placeholder="Теги (дом, уют)" className="w-1/2 p-3 rounded-xl border-2 border-[#e3d2b3] dark:border-[#855328] bg-white dark:bg-[#1f1a16] focus:border-[#9e6b36] outline-none" />
                     </div>
 
@@ -262,18 +355,12 @@ export default function WishlistView() {
 
                                 {myUserId === item.user_id && (
                                     <button
-                                        onClick={async () => {
-                                            if (confirm("Точно удалить это желание?")) {
-                                                const { deleteWishlistItemAction } = await import('@/app/actions/delete');
-                                                const toastId = toast.loading('Удаляем...');
-                                                const res = await deleteWishlistItemAction(item.id);
-                                                if (res.error) toast.error(res.error, { id: toastId });
-                                                else toast.success('Удалено!', { id: toastId });
-                                            }
-                                        }}
-                                        className="text-xs font-bold text-red-400 hover:text-red-500 opacity-60 hover:opacity-100 self-start mt-3"
+                                        type="button"
+                                        onClick={() => { void handleDeleteItem(item); }}
+                                        disabled={!!deletingItemIds[item.id]}
+                                        className="text-xs font-bold text-red-400 hover:text-red-500 opacity-60 hover:opacity-100 self-start mt-3 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
-                                        🗑️ Удалить желание
+                                        {deletingItemIds[item.id] ? 'Удаляем...' : '🗑️ Удалить желание'}
                                     </button>
                                 )}
                             </div>

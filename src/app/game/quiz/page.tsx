@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import { generateQuizQuestionsAction } from '@/app/actions/quiz';
 import confetti from 'canvas-confetti';
+import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Question = {
     id: string;
@@ -52,6 +53,7 @@ export default function QuizPage() {
 
     const [aiLoading, setAiLoading] = useState(false);
     const [aiSuggestions, setAiSuggestions] = useState<{ question: string; hint?: string }[]>([]);
+    const resolvedPartnerName = useResolvedPartnerName();
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -225,7 +227,7 @@ export default function QuizPage() {
             {tab === 'write' && (
                 <div className="w-full flex flex-col gap-4">
                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-2xl p-4">
-                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">🤫 Партнер видит вопросы, но не видит правильные ответы!</p>
+                        <p className="text-sm font-bold text-amber-800 dark:text-amber-200">🤫 {resolvedPartnerName} видит вопросы, но не видит правильные ответы!</p>
                     </div>
 
                     <form onSubmit={handleAddQuestion} className="flex flex-col gap-3 bg-[#fdfbf9] dark:bg-[#2c2623] rounded-3xl p-5 border border-[#e8dfd5] dark:border-[#3d332c]">
@@ -294,11 +296,11 @@ export default function QuizPage() {
                                                 {partnerAns && (
                                                     <p className={`text-xs mt-0.5 font-medium ${partnerAns.is_correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
                                                         }`}>
-                                                        Партнер ответил: «{partnerAns.answer_text}»
+                                                        {resolvedPartnerName} ответил(а): «{partnerAns.answer_text}»
                                                     </p>
                                                 )}
                                                 {!partnerAns && (
-                                                    <p className="text-xs mt-0.5 opacity-40 italic">Партнер ещё не ответил</p>
+                                                    <p className="text-xs mt-0.5 opacity-40 italic">{resolvedPartnerName} ещё не ответил(а)</p>
                                                 )}
                                             </div>
                                         </div>
@@ -316,7 +318,7 @@ export default function QuizPage() {
                     {partnerQuestions.length === 0 ? (
                         <div className="flex flex-col items-center gap-4 mt-10 text-center">
                             <span className="text-5xl">🙈</span>
-                            <p className="font-bold text-[#4a403b] dark:text-[#d4c8c1]">Партнер ещё не добавил вопросы!</p>
+                            <p className="font-bold text-[#4a403b] dark:text-[#d4c8c1]">{resolvedPartnerName} ещё не добавил(а) вопросы!</p>
                             <p className="text-sm opacity-50">Пусть перейдет на вкладку «Мои вопросы» и добавит несколько.</p>
                         </div>
                     ) : (
@@ -406,13 +408,13 @@ export default function QuizPage() {
                             <span className="text-5xl">{correctCount === partnerQuestions.length ? '🏆' : correctCount > partnerQuestions.length / 2 ? '🥈' : '📚'}</span>
                             <p className="font-extrabold text-2xl text-[#4a403b] dark:text-[#d4c8c1]">{correctCount}/{partnerQuestions.length}</p>
                             <p className="text-sm opacity-60 font-bold">
-                                {correctCount === partnerQuestions.length ? 'Идеально знаешь своего партнера!' : `ты знаешь партнёра на ${Math.round(correctCount / partnerQuestions.length * 100)}%`}
+                                {correctCount === partnerQuestions.length ? `Идеально знаешь ${resolvedPartnerName}!` : `ты знаешь ${resolvedPartnerName} на ${Math.round(correctCount / partnerQuestions.length * 100)}%`}
                             </p>
                         </div>
                     )}
                     <div className="flex flex-col gap-2">
                         <h3 className="font-bold text-xs uppercase tracking-wider opacity-50 px-1 text-[#4a403b] dark:text-[#d4c8c1]">Твои ответы</h3>
-                        {partnerQuestions.length === 0 && <p className="opacity-50 text-sm text-center mt-4">Нет вопросов от партнера</p>}
+                        {partnerQuestions.length === 0 && <p className="opacity-50 text-sm text-center mt-4">Нет вопросов от {resolvedPartnerName}</p>}
                         {partnerQuestions.map((q, i) => {
                             const ans = myAnswers[q.id];
                             return (

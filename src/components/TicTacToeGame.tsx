@@ -7,6 +7,7 @@ import { getTicTacToeScoreAction, incrementTicTacToeScoreAction } from '@/app/ac
 import toast from 'react-hot-toast';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import confetti from 'canvas-confetti';
+import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Player = 'X' | 'O' | null;
 
@@ -19,6 +20,7 @@ export default function TicTacToeGame() {
     const [myId, setMyId] = useState<string | null>(null);
     const [scores, setScores] = useState<any>(null);
     const [channel, setChannel] = useState<any>(null);
+    const resolvedPartnerName = useResolvedPartnerName();
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,7 +96,7 @@ export default function TicTacToeGame() {
 
         const currentPlayerSymbol = xIsNext ? 'X' : 'O';
         if (myPlayerSymbol && myPlayerSymbol !== currentPlayerSymbol) {
-            toast.error("Сейчас ход партнера!");
+            toast.error(`Сейчас ход ${resolvedPartnerName}!`);
             return;
         }
 
@@ -155,12 +157,12 @@ export default function TicTacToeGame() {
 
     let status;
     if (winner) {
-        status = winner === myPlayerSymbol ? "Вы победили! 🎉" : "Партнер победил 💔";
+        status = winner === myPlayerSymbol ? "Вы победили! 🎉" : `${resolvedPartnerName} победил(а) 💔`;
     } else if (isDraw) {
         status = "Ничья! 🤝";
     } else {
         const currentPlayerSymbol = xIsNext ? 'X' : 'O';
-        status = myPlayerSymbol === currentPlayerSymbol ? "Ваш ход!" : "Ожидаем ход партнера...";
+        status = myPlayerSymbol === currentPlayerSymbol ? "Ваш ход!" : `Ожидаем ход ${resolvedPartnerName}...`;
     }
 
     const showModal = winner || isDraw;
@@ -174,7 +176,7 @@ export default function TicTacToeGame() {
                             {winner === myPlayerSymbol ? '🎉' : isDraw ? '🤝' : '💔'}
                         </span>
                         <h2 className="text-2xl font-extrabold mb-6 text-center text-[#4a403b] dark:text-[#d4c8c1]">
-                            {winner === myPlayerSymbol ? 'Вы победили!' : isDraw ? 'Ничья!' : 'Партнер победил'}
+                            {winner === myPlayerSymbol ? 'Вы победили!' : isDraw ? 'Ничья!' : `${resolvedPartnerName} победил(а)`}
                         </h2>
                         <button
                             onClick={restartGame}
@@ -212,13 +214,13 @@ export default function TicTacToeGame() {
 
             {scores && (
                 <div className="mt-8 bg-[#fdfbf9] dark:bg-[#2c2623] px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-4 text-lg border border-[#e8dfd5] dark:border-[#3d332c] shadow-sm">
-                    <span className="text-[#e07a5f]">{myPlayerSymbol === 'X' ? myName || 'Вы' : 'Партнер'}</span>
+                    <span className="text-[#e07a5f]">{myPlayerSymbol === 'X' ? myName || 'Вы' : resolvedPartnerName}</span>
                     <div className="flex items-center gap-2 bg-[#e8dfd5] dark:bg-[#1a1614] px-4 py-1.5 rounded-full">
                         <span>{scores.user1_score}</span>
                         <span className="opacity-40 text-sm">:</span>
                         <span>{scores.user2_score}</span>
                     </div>
-                    <span className="text-[#81b29a]">{myPlayerSymbol === 'O' ? myName || 'Вы' : 'Партнер'}</span>
+                    <span className="text-[#81b29a]">{myPlayerSymbol === 'O' ? myName || 'Вы' : resolvedPartnerName}</span>
                 </div>
             )}
 

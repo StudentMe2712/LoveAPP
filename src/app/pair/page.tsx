@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { checkPairAction, joinPairAction, signOutAction } from "@/app/actions/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { partnerOrFallback, useResolvedPartnerName } from "@/lib/hooks/useResolvedPartnerName";
 
 export default function PairPage() {
     const router = useRouter();
@@ -11,6 +12,10 @@ export default function PairPage() {
     const [actionLoading, setActionLoading] = useState(false);
     const [myId, setMyId] = useState("");
     const [partnerCode, setPartnerCode] = useState("");
+    const resolvedPartnerName = useResolvedPartnerName();
+    const partnerWith = partnerOrFallback(resolvedPartnerName, "партнёром");
+    const partnerTo = partnerOrFallback(resolvedPartnerName, "партнёру");
+    const partnerGenitive = partnerOrFallback(resolvedPartnerName, "партнёра");
 
     useEffect(() => {
         const checkStatus = async () => {
@@ -57,7 +62,7 @@ export default function PairPage() {
                 <span className="text-5xl drop-shadow-sm mb-4">🔑</span>
                 <h1 className="text-2xl font-extrabold tracking-tight mb-2">Создать Пару</h1>
                 <p className="text-sm font-medium opacity-70 mb-8">
-                    Чтобы пользоваться домиком, вам нужно соединиться с партнером.
+                    Чтобы пользоваться домиком, вам нужно соединиться с {partnerWith}.
                 </p>
 
                 <div className="w-full bg-[#fdfbf9] dark:bg-[#1f1a16] p-4 rounded-2xl border border-[#e8dfd5] dark:border-[#3d332c] mb-8">
@@ -70,16 +75,16 @@ export default function PairPage() {
                         📋 Скопировать код
                     </button>
                     <p className="text-xs opacity-60 mt-4 leading-tight">
-                        Отправьте этот код партнеру, если он сейчас вводит код ниже.
+                        Отправьте этот код {partnerTo}, если он(а) сейчас вводит код ниже.
                     </p>
                 </div>
 
                 <form onSubmit={handleJoinClick} className="w-full flex flex-col gap-3">
-                    <p className="text-xs font-bold uppercase tracking-widest opacity-50 self-start ml-1">Или введите код партнера:</p>
+                    <p className="text-xs font-bold uppercase tracking-widest opacity-50 self-start ml-1">Или введите код {partnerGenitive}:</p>
                     <input
                         type="text"
                         required
-                        placeholder="Код партнера..."
+                        placeholder={`Код ${partnerGenitive}...`}
                         value={partnerCode}
                         onChange={e => setPartnerCode(e.target.value)}
                         className="w-full p-4 rounded-2xl border-2 border-[#e8dfd5] dark:border-[#3d332c] bg-[#fdfbf9] dark:bg-[#1f1a16] focus:border-[#cca573] dark:focus:border-[#b98b53] outline-none font-mono text-center"

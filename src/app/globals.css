@@ -25,23 +25,39 @@
     --btn-text: var(--color-wood-900);
     --card-bg: #ffffff;
     --border-warm: var(--color-wood-200);
+    --bg: #f2ebe3;
+    --bg-card: #fdfbf9;
+    --bg-muted: #e8dfd5;
+    --accent: #cca573;
+    --accent-dark: #b98b53;
+    --accent2: #e07a5f;
+    --text: #4a403b;
+    --text-muted: #9e8c84;
+    --border: #e8dfd5;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: var(--color-night-900);
-      --foreground: var(--color-wood-100);
-      --btn-bg: var(--color-wood-700);
-      --btn-hover: var(--color-wood-600);
-      --btn-text: var(--color-wood-100);
-      --card-bg: var(--color-night-800);
-      --border-warm: var(--color-wood-800);
-    }
+  html.dark {
+    --background: var(--color-night-900);
+    --foreground: var(--color-wood-100);
+    --btn-bg: var(--color-wood-700);
+    --btn-hover: var(--color-wood-600);
+    --btn-text: var(--color-wood-100);
+    --card-bg: var(--color-night-800);
+    --border-warm: var(--color-wood-800);
+    --bg: #1a1614;
+    --bg-card: #2c2623;
+    --bg-muted: #3d332c;
+    --accent: #cca573;
+    --accent-dark: #b98b53;
+    --accent2: #e07a5f;
+    --text: #d4c8c1;
+    --text-muted: #9e8c84;
+    --border: #3d332c;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--bg);
+    color: var(--text);
     font-family: Arial, Helvetica, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }

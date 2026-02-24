@@ -1,245 +1,571 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
-import { differenceInYears, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import confetti from 'canvas-confetti';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { createBrowserClient } from "@supabase/ssr";
+import journeyBg from "@/assets/journey-bg.png";
 
-interface FloatingHeart {
+type TimerParts = {
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+};
+
+type FloatingReward = {
     id: number;
+    label: string;
     x: number;
-    size: number;
-    opacity: number;
-    color: string;
-    duration: number;
+    y: number;
+    tone: "gold" | "pink" | "mint";
+};
+
+const BONUS_REWARDS = ["💫 Плюшка!", "🫶 Обнимашки", "✨ Умничка", "🌸 Нежность", "💖 Любовь"];
+
+function pad2(value: number): string {
+    return value.toString().padStart(2, "0");
 }
 
-const HEART_COLORS = ['#e07a5f', '#f2cc8f', '#81b29a', '#f4a261', '#e76f51', '#ff69b4', '#ff1493'];
+function buildTimer(startedAt: Date, now: Date): TimerParts {
+    const diffSeconds = Math.max(0, Math.floor((now.getTime() - startedAt.getTime()) / 1000));
+
+    const days = Math.floor(diffSeconds / 86400);
+    const dayRest = diffSeconds % 86400;
+    const hours = Math.floor(dayRest / 3600);
+    const hourRest = dayRest % 3600;
+    const minutes = Math.floor(hourRest / 60);
+    const seconds = hourRest % 60;
+
+    return { days, hours, minutes, seconds };
+}
 
 export default function JourneyPage() {
     const [startedAt, setStartedAt] = useState<Date | null>(null);
-    const [now, setNow] = useState(new Date());
+    const [now, setNow] = useState(() => new Date());
     const [loading, setLoading] = useState(true);
-    const [hearts, setHearts] = useState<FloatingHeart[]>([]);
-    const [clickCount, setClickCount] = useState(0);
-    const [pulse, setPulse] = useState(false);
-    const heartIdRef = useRef(0);
+    const [heartScore, setHeartScore] = useState(0);
+    const [combo, setCombo] = useState(0);
+    const [autoClickEnabled, setAutoClickEnabled] = useState(true);
+    const [autoLevel, setAutoLevel] = useState(1);
+    const [floatingRewards, setFloatingRewards] = useState<FloatingReward[]>([]);
+    const [tapFlash, setTapFlash] = useState(false);
+    const rewardIdRef = useRef(0);
+    const lastTapRef = useRef(0);
+    const comboRef = useRef(0);
+    const autoTickRef = useRef(0);
+    const tapFlashTimeoutRef = useRef<number | null>(null);
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            ),
+        [],
     );
 
     useEffect(() => {
+        let active = true;
+
         const fetchDate = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.user_metadata?.anniversary_date) {
-                setStartedAt(new Date(user.user_metadata.anniversary_date));
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!active) return;
+
+            const rawDate = user?.user_metadata?.anniversary_date;
+            if (rawDate) {
+                const parsed = new Date(rawDate);
+                if (!Number.isNaN(parsed.getTime())) {
+                    setStartedAt(parsed);
+                }
             }
+
             setLoading(false);
         };
-        fetchDate();
-    }, []);
+
+        void fetchDate();
+
+        return () => {
+            active = false;
+        };
+    }, [supabase]);
 
     useEffect(() => {
         if (!startedAt) return;
-        const interval = setInterval(() => setNow(new Date()), 1000);
-        return () => clearInterval(interval);
+
+        const interval = window.setInterval(() => setNow(new Date()), 1000);
+        return () => window.clearInterval(interval);
     }, [startedAt]);
 
-    const handleHeartClick = useCallback(() => {
-        // Haptic feedback
-        if (navigator.vibrate) {
-            navigator.vibrate(30);
-        }
+    const pushFloatingReward = useCallback((label?: string) => {
+        const tones: FloatingReward["tone"][] = ["gold", "pink", "mint"];
+        const reward: FloatingReward = {
+            id: rewardIdRef.current++,
+            label: label ?? BONUS_REWARDS[Math.floor(Math.random() * BONUS_REWARDS.length)]!,
+            x: Math.floor((Math.random() - 0.5) * 140),
+            y: -40 - Math.floor(Math.random() * 70),
+            tone: tones[Math.floor(Math.random() * tones.length)]!,
+        };
 
-        // Pulse animation
-        setPulse(true);
-        setTimeout(() => setPulse(false), 300);
-
-        setClickCount(prev => {
-            const newCount = prev + 1;
-            // Confetti every 10 clicks
-            if (newCount % 10 === 0) {
-                confetti({
-                    particleCount: 60,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: HEART_COLORS,
-                    shapes: ['circle'],
-                });
-            }
-            return newCount;
-        });
-
-        // Spawn floating hearts
-        const count = Math.floor(Math.random() * 3) + 1;
-        const newHearts: FloatingHeart[] = Array.from({ length: count }, () => {
-            heartIdRef.current += 1;
-            return {
-                id: heartIdRef.current,
-                x: 35 + Math.random() * 30, // % from left
-                size: 16 + Math.random() * 24,
-                opacity: 0.6 + Math.random() * 0.4,
-                color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
-                duration: 1.2 + Math.random() * 0.8,
-            };
-        });
-
-        setHearts(prev => [...prev, ...newHearts]);
-        setTimeout(() => {
-            const ids = newHearts.map(h => h.id);
-            setHearts(prev => prev.filter(h => !ids.includes(h.id)));
-        }, 2000);
+        setFloatingRewards((current) => [...current, reward]);
     }, []);
 
-    // Timer calculations
-    let years = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
-    if (startedAt) {
-        years = differenceInYears(now, startedAt);
-        const afterYears = new Date(startedAt);
-        afterYears.setFullYear(afterYears.getFullYear() + years);
-        days = differenceInDays(now, afterYears);
-        const afterDays = new Date(afterYears);
-        afterDays.setDate(afterDays.getDate() + days);
-        hours = differenceInHours(now, afterDays);
-        const afterHours = new Date(afterDays);
-        afterHours.setHours(afterHours.getHours() + hours);
-        minutes = differenceInMinutes(now, afterHours);
-        const afterMinutes = new Date(afterHours);
-        afterMinutes.setMinutes(afterMinutes.getMinutes() + minutes);
-        seconds = differenceInSeconds(now, afterMinutes);
-    }
+    const removeFloatingReward = useCallback((id: number) => {
+        setFloatingRewards((current) => current.filter((item) => item.id !== id));
+    }, []);
 
-    const heartLevel = Math.min(clickCount, 100);
-    const heartEmoji = clickCount === 0 ? '🤍' : clickCount < 5 ? '🩷' : clickCount < 15 ? '💕' : clickCount < 30 ? '💖' : clickCount < 50 ? '💗' : '💓';
+    const triggerTapFlash = useCallback(() => {
+        if (tapFlashTimeoutRef.current) {
+            window.clearTimeout(tapFlashTimeoutRef.current);
+        }
+        setTapFlash(true);
+        tapFlashTimeoutRef.current = window.setTimeout(() => {
+            setTapFlash(false);
+            tapFlashTimeoutRef.current = null;
+        }, 160);
+    }, []);
+
+    const onHeartTap = useCallback(() => {
+        const nowMs = Date.now();
+        const nextCombo = nowMs - lastTapRef.current <= 1400 ? comboRef.current + 1 : 1;
+        lastTapRef.current = nowMs;
+        comboRef.current = nextCombo;
+        setCombo(nextCombo);
+
+        const gain = nextCombo >= 14 ? 3 : nextCombo >= 7 ? 2 : 1;
+        setHeartScore((current) => current + gain);
+        pushFloatingReward(`+${gain} ❤️`);
+
+        if (Math.random() < 0.22) {
+            pushFloatingReward();
+        }
+
+        triggerTapFlash();
+    }, [pushFloatingReward, triggerTapFlash]);
+
+    useEffect(() => {
+        const interval = window.setInterval(() => {
+            if (Date.now() - lastTapRef.current > 1700 && comboRef.current > 0) {
+                comboRef.current = 0;
+                setCombo(0);
+            }
+        }, 450);
+        return () => window.clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (!autoClickEnabled) return;
+
+        const stepMs = Math.max(650, 1300 - autoLevel * 200);
+        const interval = window.setInterval(() => {
+            setHeartScore((current) => current + autoLevel);
+            autoTickRef.current += 1;
+
+            if (autoTickRef.current % 3 === 0) {
+                pushFloatingReward(`+${autoLevel} авто`);
+            }
+        }, stepMs);
+
+        return () => window.clearInterval(interval);
+    }, [autoClickEnabled, autoLevel, pushFloatingReward]);
+
+    useEffect(
+        () => () => {
+            if (tapFlashTimeoutRef.current) {
+                window.clearTimeout(tapFlashTimeoutRef.current);
+            }
+        },
+        [],
+    );
+
+    const timer = startedAt ? buildTimer(startedAt, now) : null;
 
     return (
-        <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32 relative overflow-hidden">
-            {/* Floating hearts */}
-            {hearts.map(heart => (
-                <div
-                    key={heart.id}
-                    className="absolute pointer-events-none z-50 animate-float-up"
-                    style={{
-                        left: `${heart.x}%`,
-                        bottom: '45%',
-                        fontSize: `${heart.size}px`,
-                        color: heart.color,
-                        opacity: heart.opacity,
-                        animation: `floatUp ${heart.duration}s ease-out forwards`,
-                    }}
+        <main className="relative w-full min-h-[100dvh] overflow-hidden">
+            <Image
+                src={journeyBg}
+                alt="Наш путь фон"
+                fill
+                priority
+                unoptimized
+                className="object-cover object-center"
+                sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(22,7,30,0.14)_0%,rgba(24,8,24,0.07)_30%,rgba(16,7,17,0.42)_75%,rgba(10,5,11,0.6)_100%)]" />
+
+            <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[760px] flex-col items-center px-4 pt-8 pb-10 text-white">
+                <Link
+                    href="/"
+                    className="absolute left-4 top-4 rounded-full border border-white/35 bg-black/20 px-2.5 py-1 text-sm font-black backdrop-blur-sm transition-opacity hover:opacity-90"
                 >
-                    ❤️
+                    ←
+                </Link>
+
+                <h1 className="journey-title mt-6 flex items-center gap-2 text-center leading-none">
+                    <span className="journey-title-text">Наш Путь</span>
+                    <span className="journey-title-emoji" aria-hidden>❤️🙌</span>
+                </h1>
+
+                <div className="mt-24 flex w-full flex-col items-center">
+                    <p className="journey-subtitle whitespace-nowrap text-center uppercase">МЫ ВМЕСТЕ УЖЕ</p>
+
+                    {loading ? (
+                        <div className="mt-8 h-24 w-[90%] max-w-[620px] animate-pulse rounded-2xl bg-white/20" />
+                    ) : !timer ? (
+                        <div className="mt-8 rounded-2xl border border-white/35 bg-black/22 px-5 py-4 text-center backdrop-blur-[2px]">
+                            <p className="text-base font-bold">Укажи дату начала отношений в настройках.</p>
+                            <Link
+                                href="/settings"
+                                className="mt-3 inline-flex rounded-xl border border-white/45 bg-white/10 px-4 py-2 text-sm font-black uppercase tracking-wide"
+                            >
+                                Открыть настройки
+                            </Link>
+                        </div>
+                    ) : (
+                        <div
+                            className="mt-8 grid w-full max-w-[700px] grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-end gap-x-1 text-center"
+                            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                        >
+                            <div className="flex flex-col items-center">
+                                <span className="timer-num text-[96px] leading-[0.84]">{timer.days}</span>
+                                <span className="timer-unit mt-1 text-[40px]">ДН</span>
+                            </div>
+                            <span className="timer-colon pb-6 text-[70px]">:</span>
+
+                            <div className="flex flex-col items-center">
+                                <span className="timer-num text-[96px] leading-[0.84]">{pad2(timer.hours)}</span>
+                                <span className="timer-unit mt-1 text-[40px]">Ч</span>
+                            </div>
+                            <span className="timer-colon pb-6 text-[70px]">:</span>
+
+                            <div className="flex flex-col items-center">
+                                <span className="timer-num text-[96px] leading-[0.84]">{pad2(timer.minutes)}</span>
+                                <span className="timer-unit mt-1 text-[40px]">М</span>
+                            </div>
+                            <span className="timer-colon pb-6 text-[70px]">:</span>
+
+                            <div className="flex flex-col items-center">
+                                <span className="timer-num timer-sec text-[96px] leading-[0.84]">{pad2(timer.seconds)}</span>
+                                <span className="timer-unit mt-1 text-[40px]">С</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            ))}
+
+                <div className="journey-heart-zone pointer-events-none absolute inset-x-0 z-20 flex justify-center">
+                    <div className="pointer-events-auto relative flex flex-col items-center">
+                        <div className="journey-reward-layer" aria-hidden>
+                            {floatingRewards.map((reward) => (
+                                <span
+                                    key={reward.id}
+                                    className={`journey-reward journey-reward--${reward.tone}`}
+                                    style={
+                                        {
+                                            "--reward-x": `${reward.x}px`,
+                                            "--reward-y": `${reward.y}px`,
+                                        } as React.CSSProperties
+                                    }
+                                    onAnimationEnd={() => removeFloatingReward(reward.id)}
+                                >
+                                    {reward.label}
+                                </span>
+                            ))}
+                        </div>
+
+                        <button
+                            type="button"
+                            className={`journey-heart-btn${tapFlash ? " journey-heart-btn--tap" : ""}`}
+                            onClick={onHeartTap}
+                            aria-label="Антистресс сердце"
+                        >
+                            <span className="journey-heart select-none text-[170px] leading-none" aria-hidden>
+                                🩷
+                            </span>
+                        </button>
+
+                        <div className="journey-heart-panel mt-3 rounded-2xl border border-white/40 bg-black/28 px-4 py-2 text-center backdrop-blur-[2px]">
+                            <div className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-white/88">
+                                Сердечки: {heartScore} · Комбо x{combo}
+                            </div>
+                            <div className="mt-1 flex items-center justify-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setAutoClickEnabled((value) => !value)}
+                                    className="rounded-lg border border-white/45 bg-white/12 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-white"
+                                >
+                                    {autoClickEnabled ? "Автоклик: ВКЛ" : "Автоклик: ВЫКЛ"}
+                                </button>
+                                {autoLevel < 3 && heartScore >= (autoLevel === 1 ? 25 : 80) ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const nextLevel = autoLevel + 1;
+                                            setAutoLevel(nextLevel);
+                                            pushFloatingReward(`Турбо x${nextLevel}`);
+                                        }}
+                                        className="rounded-lg border border-[#ffd78b]/80 bg-[#ffd78b]/20 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-[#fff3d5]"
+                                    >
+                                        Плюшка: Турбо x{autoLevel + 1}
+                                    </button>
+                                ) : null}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <style jsx>{`
-                @keyframes floatUp {
-                    0% { transform: translateY(0) scale(1); opacity: 1; }
-                    100% { transform: translateY(-200px) scale(0.3); opacity: 0; }
+                .journey-title {
+                    font-size: 41px;
+                    font-weight: 800;
+                    letter-spacing: -0.008em;
+                    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.52);
+                }
+
+                .journey-title-text {
+                    color: rgba(255, 247, 236, 0.84);
+                }
+
+                .journey-title-emoji {
+                    font-size: 0.72em;
+                    line-height: 1;
+                    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+                    opacity: 0.88;
+                }
+
+                .journey-subtitle {
+                    font-size: 33px;
+                    font-weight: 700;
+                    letter-spacing: 0.11em;
+                    color: rgba(255, 245, 229, 0.68);
+                    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.42);
+                }
+
+                .timer-num {
+                    color: rgba(255, 245, 228, 0.84);
+                    font-weight: 800;
+                    letter-spacing: -0.016em;
+                    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+                }
+
+                .timer-sec {
+                    color: #e38849;
+                    text-shadow:
+                        0 3px 10px rgba(0, 0, 0, 0.5),
+                        0 0 10px rgba(227, 136, 73, 0.26);
+                }
+
+                .timer-unit {
+                    color: rgba(255, 236, 212, 0.74);
+                    font-weight: 700;
+                    letter-spacing: 0.14em;
+                    text-shadow: 0 2px 7px rgba(0, 0, 0, 0.43);
+                }
+
+                .timer-colon {
+                    color: rgba(246, 194, 100, 0.68);
+                    font-weight: 800;
+                    text-shadow: 0 0 8px rgba(246, 194, 100, 0.3);
+                }
+
+                .journey-heart {
+                    filter:
+                        drop-shadow(0 0 18px rgba(255, 178, 209, 0.82))
+                        drop-shadow(0 0 34px rgba(255, 116, 173, 0.78))
+                        drop-shadow(0 0 58px rgba(255, 96, 150, 0.42));
+                    animation: heartPulse 2.4s ease-in-out infinite;
+                }
+
+                .journey-heart-zone {
+                    top: clamp(62%, 67%, 73%);
+                }
+
+                .journey-heart-btn {
+                    border: 0;
+                    background: transparent;
+                    line-height: 1;
+                    cursor: pointer;
+                    transition: transform 0.12s ease;
+                }
+
+                .journey-heart-btn:active {
+                    transform: scale(1.08);
+                }
+
+                .journey-heart-btn--tap {
+                    transform: scale(1.12);
+                }
+
+                .journey-heart-panel {
+                    min-width: 260px;
+                    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
+                }
+
+                .journey-reward-layer {
+                    pointer-events: none;
+                    position: absolute;
+                    top: -80px;
+                    left: 50%;
+                    width: 340px;
+                    height: 210px;
+                    transform: translateX(-50%);
+                }
+
+                .journey-reward {
+                    position: absolute;
+                    left: 50%;
+                    top: 70%;
+                    font-size: 20px;
+                    font-weight: 900;
+                    letter-spacing: 0.01em;
+                    transform: translate(-50%, 0);
+                    animation: rewardRise 1.25s ease-out forwards;
+                    text-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
+                    white-space: nowrap;
+                }
+
+                .journey-reward--gold {
+                    color: #ffe39c;
+                }
+
+                .journey-reward--pink {
+                    color: #ffd0e7;
+                }
+
+                .journey-reward--mint {
+                    color: #c6ffe8;
+                }
+
+                @keyframes rewardRise {
+                    0% {
+                        opacity: 0;
+                        transform: translate(-50%, 0);
+                    }
+                    15% {
+                        opacity: 1;
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translate(calc(-50% + var(--reward-x)), var(--reward-y));
+                    }
+                }
+
+                @keyframes heartPulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.08); }
+                }
+
+                @media (max-width: 920px) {
+                    .journey-title {
+                        font-size: 37px;
+                    }
+
+                    .journey-subtitle {
+                        font-size: 29px;
+                        letter-spacing: 0.09em;
+                    }
+
+                    .timer-num {
+                        font-size: 84px !important;
+                    }
+
+                    .timer-unit {
+                        font-size: 34px !important;
+                    }
+
+                    .timer-colon {
+                        font-size: 62px !important;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .journey-title {
+                        margin-top: 18px;
+                        font-size: 33px;
+                    }
+
+                    .journey-subtitle {
+                        font-size: 25px;
+                        letter-spacing: 0.07em;
+                    }
+
+                    .timer-num {
+                        font-size: 50px !important;
+                    }
+
+                    .timer-unit {
+                        margin-top: 2px;
+                        font-size: 18px !important;
+                        letter-spacing: 0.07em;
+                    }
+
+                    .timer-colon {
+                        padding-bottom: 14px;
+                        font-size: 37px !important;
+                    }
+
+                    .journey-heart {
+                        font-size: 128px !important;
+                    }
+
+                    .journey-heart-zone {
+                        top: clamp(63%, 71%, 79%);
+                    }
+
+                    .journey-heart-panel {
+                        min-width: 224px;
+                        padding: 8px 10px;
+                    }
+
+                    .journey-reward-layer {
+                        width: 300px;
+                    }
+
+                    .journey-reward {
+                        font-size: 16px;
+                    }
+                }
+
+                @media (max-width: 430px) {
+                    .journey-title {
+                        font-size: 30px;
+                    }
+
+                    .journey-subtitle {
+                        font-size: 22px;
+                        letter-spacing: 0.05em;
+                    }
+
+                    .timer-num {
+                        font-size: 43px !important;
+                    }
+
+                    .timer-unit {
+                        font-size: 15px !important;
+                        letter-spacing: 0.05em;
+                    }
+
+                    .timer-colon {
+                        font-size: 31px !important;
+                        padding-bottom: 10px;
+                    }
+
+                    .journey-heart-zone {
+                        top: clamp(64%, 72%, 81%);
+                    }
+
+                    .journey-heart-panel {
+                        min-width: 210px;
+                    }
+
+                    .journey-heart-panel :global(button) {
+                        font-size: 10px;
+                    }
                 }
             `}</style>
-
-            {/* Header */}
-            <header className="w-full flex justify-between items-center mb-8">
-                <Link href="/" className="text-2xl opacity-80 hover:opacity-100 transition-opacity">⬅️</Link>
-                <h1 className="text-2xl font-extrabold tracking-tight">Наш Путь 💑</h1>
-                <div className="w-8" />
-            </header>
-
-            {/* Timer Block */}
-            <section className="w-full bg-[#fdfbf9] dark:bg-[#2c2623] rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-[#e8dfd5] dark:border-[#3d332c] mb-8 flex flex-col items-center">
-                <h2 className="text-[11px] font-extrabold uppercase tracking-widest opacity-50 mb-5 text-[#4a403b] dark:text-[#d4c8c1]">Мы вместе уже</h2>
-
-                {loading ? (
-                    <div className="h-16 w-48 bg-[#e8dfd5]/40 dark:bg-[#3d332c]/40 rounded-2xl animate-pulse" />
-                ) : !startedAt ? (
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <span className="text-4xl">⏳</span>
-                        <p className="font-bold text-sm text-[#4a403b] dark:text-[#d4c8c1]">
-                            Установите дату начала отношений, чтобы запустить таймер!
-                        </p>
-                        <Link href="/settings" className="px-5 py-2.5 bg-[#cca573] hover:bg-[#b98b53] text-white text-sm font-bold rounded-2xl transition-colors active:scale-95">
-                            В настройки →
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="flex items-end justify-center gap-3 font-serif text-[#4a403b] dark:text-[#d4c8c1]">
-                        {years > 0 && (
-                            <div className="flex flex-col items-center">
-                                <span className="text-4xl font-black leading-none">{years}</span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest mt-1.5 opacity-50">лет</span>
-                            </div>
-                        )}
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-black leading-none">{days}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest mt-1.5 opacity-50">дн</span>
-                        </div>
-                        <span className="opacity-25 pb-2.5 text-2xl font-light">:</span>
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-black leading-none">{hours.toString().padStart(2, '0')}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest mt-1.5 opacity-50">ч</span>
-                        </div>
-                        <span className="opacity-25 pb-2.5 text-2xl font-light">:</span>
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-black leading-none">{minutes.toString().padStart(2, '0')}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest mt-1.5 opacity-50">м</span>
-                        </div>
-                        <span className="opacity-30 pb-2.5 text-2xl font-light animate-pulse">:</span>
-                        <div className="flex flex-col items-center">
-                            <span className="text-4xl font-black leading-none text-[#e07a5f]">{seconds.toString().padStart(2, '0')}</span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest mt-1.5 text-[#e07a5f]">с</span>
-                        </div>
-                    </div>
-                )}
-            </section>
-
-            {/* Anti-stress Heart Clicker */}
-            <section className="w-full flex flex-col items-center gap-6">
-                <div className="text-center">
-                    <h2 className="text-xl font-extrabold text-[#4a403b] dark:text-[#d4c8c1] mb-1">Антистресс ❤️</h2>
-                    <p className="text-sm opacity-50 text-[#4a403b] dark:text-[#d4c8c1]">Нажми на сердце и почувствуй тепло</p>
-                </div>
-
-                {/* Main heart button */}
-                <button
-                    onClick={handleHeartClick}
-                    className="relative flex items-center justify-center select-none outline-none"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                >
-                    <div
-                        className="transition-all duration-150"
-                        style={{
-                            fontSize: `${100 + heartLevel * 0.5}px`,
-                            filter: `drop-shadow(0 0 ${8 + heartLevel * 0.3}px rgba(224, 122, 95, ${0.3 + heartLevel * 0.005}))`,
-                            transform: pulse ? 'scale(0.88)' : 'scale(1)',
-                            transition: 'transform 0.15s ease, filter 0.3s ease, font-size 0.5s ease',
-                        }}
-                    >
-                        {heartEmoji}
-                    </div>
-                </button>
-
-                {/* Click counter */}
-                {clickCount > 0 && (
-                    <div className="flex flex-col items-center gap-1 animate-in fade-in duration-300">
-                        <span className="text-3xl font-black text-[#e07a5f]">{clickCount}</span>
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-40 text-[#4a403b] dark:text-[#d4c8c1]">
-                            {clickCount === 1 ? 'нажатие' : clickCount < 5 ? 'нажатия' : 'нажатий'}
-                        </span>
-                        {clickCount >= 10 && <span className="text-xs opacity-50">🎉 так держать!</span>}
-                        {clickCount >= 50 && <span className="text-xs text-[#e07a5f] font-bold">💓 ты профессионал любви!</span>}
-                    </div>
-                )}
-
-                {clickCount === 0 && (
-                    <p className="text-xs opacity-30 text-center text-[#4a403b] dark:text-[#d4c8c1] mt-2">
-                        нажимай быстрее — чем больше, тем больше любви! 🌸
-                    </p>
-                )}
-            </section>
         </main>
     );
 }

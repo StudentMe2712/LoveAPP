@@ -43,7 +43,7 @@ export async function addWishlistItemAction(formData: FormData) {
             }
         }
 
-        const { error: insertError } = await supabase
+        const { data: item, error: insertError } = await supabase
             .from('wishlist')
             .insert({
                 user_id: user.id,
@@ -54,7 +54,9 @@ export async function addWishlistItemAction(formData: FormData) {
                 is_hint: isHint,
                 category,
                 photo_url: photoUrl,
-            });
+            })
+            .select('*')
+            .single();
 
         if (insertError) {
             console.error("Wishlist insert error", insertError);
@@ -62,7 +64,7 @@ export async function addWishlistItemAction(formData: FormData) {
         }
 
         revalidatePath("/wishlist");
-        return { success: true };
+        return { success: true, item };
 
     } catch (err) {
         console.error("addWishlistItemAction exception", err);

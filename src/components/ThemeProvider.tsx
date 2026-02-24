@@ -131,6 +131,10 @@ function applyPalette(palette: Palette, isDark: boolean) {
     Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
 }
 
+function isPaletteName(value: string | null): value is PaletteName {
+    return PALETTES.some((palette) => palette.name === value);
+}
+
 /* ─── Context ───────────────────────────────────────────────────────── */
 type ThemeCtx = {
     theme: 'light' | 'dark';
@@ -159,7 +163,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-        const savedPalette = (localStorage.getItem('palette') as PaletteName | null) || 'warm';
+        const savedPaletteRaw = localStorage.getItem('palette');
+        const savedPalette = isPaletteName(savedPaletteRaw) ? savedPaletteRaw : 'warm';
 
         let isDark = false;
         if (savedTheme === 'dark') {
@@ -168,37 +173,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             isDark = true;
         }
 
-        if (isDark) {
-            setTheme('dark');
-            document.documentElement.classList.add('dark');
-        }
+        setTheme(isDark ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', isDark);
         setPaletteState(savedPalette);
         const pal = PALETTES.find(p => p.name === savedPalette) || PALETTES[0];
         applyPalette(pal, isDark);
     }, []);
 
     const toggleTheme = () => {
-        const isDark = theme === 'light';
-        const newTheme = isDark ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        const pal = PALETTES.find(p => p.name === palette) || PALETTES[0];
-        applyPalette(pal, isDark);
+        setTheme((prevTheme) => {
+            const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', nextTheme);
+            return nextTheme;
+        });
     };
 
     const setPalette = (name: PaletteName) => {
         setPaletteState(name);
         localStorage.setItem('palette', name);
-        const pal = PALETTES.find(p => p.name === name) || PALETTES[0];
-        applyPalette(pal, theme === 'dark');
     };
 
     const currentPalette = PALETTES.find(p => p.name === palette) || PALETTES[0];
+
+    useEffect(() => {
+        if (!mounted) return;
+        const isDark = theme === 'dark';
+        document.documentElement.classList.toggle('dark', isDark);
+        applyPalette(currentPalette, isDark);
+    }, [currentPalette, mounted, theme]);
 
     if (!mounted) return <>{children}</>;
 

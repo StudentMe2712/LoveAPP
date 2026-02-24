@@ -6,6 +6,7 @@ import { getUserStatusesAction, updateUserStatusAction } from '@/app/actions/sta
 import { hapticFeedback } from '@/lib/utils/haptics';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 interface StatusRow {
     id: string;
@@ -97,7 +98,7 @@ export default function UserStatusWidget({ displayName, avatarUrl, partnerName }
 
     const myStatus = statuses.find(s => s.user_id === myId);
     const partnerStatus = statuses.find(s => partnerId ? s.user_id === partnerId : s.user_id !== myId);
-    const resolvedPartnerName = partnerName || 'Партнёр';
+    const resolvedPartnerName = useResolvedPartnerName(partnerName);
 
     return (
         <div className="w-full mb-6 relative px-2">

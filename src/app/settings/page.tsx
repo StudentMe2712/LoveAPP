@@ -7,8 +7,11 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import PushNotificationToggle from '@/components/PushNotificationToggle';
 import ThemePicker from '@/components/ThemePicker';
+import { useTheme } from '@/components/ThemeProvider';
+import { partnerOrFallback, useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 export default function SettingsPage() {
+    const { theme, toggleTheme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [displayName, setDisplayName] = useState('');
@@ -21,6 +24,12 @@ export default function SettingsPage() {
     const [morningEnabled, setMorningEnabled] = useState(false);
     const [morningTime, setMorningTime] = useState('08:00');
     const [inactivityEnabled, setInactivityEnabled] = useState(false);
+    const resolvedPartnerName = useResolvedPartnerName();
+    const partnerTo = partnerOrFallback(resolvedPartnerName, 'партнёру');
+    const themedCardStyle = {
+        backgroundColor: 'var(--bg-card)',
+        borderColor: 'var(--border)',
+    } satisfies React.CSSProperties;
 
     useEffect(() => {
         setMorningEnabled(localStorage.getItem('notif_morning') === 'true');
@@ -140,12 +149,33 @@ export default function SettingsPage() {
             <PushNotificationToggle />
 
             {/* ── Theme Picker ── */}
-            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] mb-4">
+            <section
+                className="w-full max-w-md rounded-[32px] p-6 shadow-sm border-2 mb-4"
+                style={themedCardStyle}
+            >
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-xs font-black uppercase tracking-widest opacity-50">Mode</p>
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="px-3 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wide transition-colors"
+                        style={{
+                            backgroundColor: 'var(--bg-muted)',
+                            color: 'var(--text)',
+                            border: '1px solid var(--border)',
+                        }}
+                    >
+                        {theme === 'dark' ? 'Dark' : 'Light'}
+                    </button>
+                </div>
                 <ThemePicker />
             </section>
 
             {/* ── Smart Notifications ── */}
-            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] mb-4 flex flex-col gap-5">
+            <section
+                className="w-full max-w-md rounded-[32px] p-6 shadow-sm border-2 mb-4 flex flex-col gap-5"
+                style={themedCardStyle}
+            >
                 <h3 className="text-xs font-black uppercase tracking-widest opacity-50 text-[#4a403b] dark:text-[#d4c8c1]">🔔 Умные уведомления</h3>
 
                 {/* Morning greeting */}
@@ -183,7 +213,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                     <div className="flex-1">
                         <p className="font-bold text-sm text-[#4a403b] dark:text-[#d4c8c1]">💌 «Давно не заходил»</p>
-                        <p className="text-xs opacity-50 mt-0.5">Напомнит написать партнёру если давно не был</p>
+                        <p className="text-xs opacity-50 mt-0.5">Напомнит написать {partnerTo} если давно не был(а)</p>
                     </div>
                     <button
                         onClick={() => {
@@ -200,7 +230,10 @@ export default function SettingsPage() {
                 </div>
             </section>
 
-            <section className="w-full max-w-md bg-white dark:bg-[#2d2621] rounded-[32px] p-6 shadow-sm border-2 border-[#e8dfd5] dark:border-[#3d332c] flex flex-col gap-8">
+            <section
+                className="w-full max-w-md rounded-[32px] p-6 shadow-sm border-2 flex flex-col gap-8"
+                style={themedCardStyle}
+            >
                 <div>
                     <h2 className="text-lg font-bold mb-4">👤 Ваш профиль</h2>
                     <form onSubmit={handleProfileUpdate} className="flex flex-col gap-4">

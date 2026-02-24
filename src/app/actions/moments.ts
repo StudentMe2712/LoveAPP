@@ -7,6 +7,58 @@ import path from "path";
 
 const UPLOADS_DIR = "\\\\itskom\\Y\\Даулет\\images";
 
+type TimeMachineMoment = {
+    id: string;
+    sender_id: string;
+    photo_url: string;
+    caption: string | null;
+    created_at: string;
+};
+
+function interleaveBySender(moments: TimeMachineMoment[]): TimeMachineMoment[] {
+    const buckets = new Map<string, TimeMachineMoment[]>();
+    for (const moment of moments) {
+        const senderBucket = buckets.get(moment.sender_id);
+        if (senderBucket) {
+            senderBucket.push(moment);
+            continue;
+        }
+        buckets.set(moment.sender_id, [moment]);
+    }
+
+    if (buckets.size <= 1) return moments;
+
+    const queues = Array.from(buckets.values()).map((list) => [...list]);
+    const interleaved: TimeMachineMoment[] = [];
+
+    let hasItems = true;
+    while (hasItems) {
+        hasItems = false;
+        for (const queue of queues) {
+            const nextItem = queue.shift();
+            if (nextItem) {
+                interleaved.push(nextItem);
+                hasItems = true;
+            }
+        }
+    }
+
+    return interleaved;
+}
+
+function rotateByDailySeed<T>(items: T[]): T[] {
+    if (items.length <= 1) return items;
+
+    const seed = new Date().toISOString().slice(0, 10);
+    let hash = 0;
+    for (const char of seed) {
+        hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    }
+
+    const offset = hash % items.length;
+    return [...items.slice(offset), ...items.slice(0, offset)];
+}
+
 export async function createMomentAction(formData: FormData) {
     try {
         const supabase = await createClient();
@@ -65,7 +117,7 @@ export async function getTimeMachineMomentAction() {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { moment: null };
+        if (!user) return { moment: null, moments: [] as TimeMachineMoment[] };
 
         // For testing/quick results, let's just use 1 day ago. In a real app we'd use 30+ days.
         const pastDate = new Date();
@@ -73,16 +125,25 @@ export async function getTimeMachineMomentAction() {
 
         const { data, error } = await supabase
             .from('moments')
-            .select('*')
+            .select('id, sender_id, photo_url, caption, created_at')
             .lt('created_at', pastDate.toISOString())
-            .limit(50);
+            .order('created_at', { ascending: false })
+            .limit(200);
 
-        if (error || !data || data.length === 0) return { moment: null };
+        if (error || !data || data.length === 0) {
+            return { moment: null, moments: [] as TimeMachineMoment[] };
+        }
 
-        const randomMoment = data[Math.floor(Math.random() * data.length)];
-        return { moment: randomMoment };
+        const interleaved = interleaveBySender(data as TimeMachineMoment[]);
+        const ordered = rotateByDailySeed(interleaved);
+        const moments = ordered.slice(0, 24);
+
+        return {
+            moment: moments[0] ?? null,
+            moments,
+        };
     } catch {
-        return { moment: null };
+        return { moment: null, moments: [] as TimeMachineMoment[] };
     }
 }
 

@@ -66,13 +66,16 @@ export async function deleteDataAction() {
 export async function updateProfileAvatarAction(formData: FormData) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    let userId = "00000000-0000-0000-0000-000000000000";
+    if (!user) {
+        return { error: "Необходима авторизация" };
+    }
 
+    const userId = user.id;
     const file = formData.get('avatar') as File;
     const displayName = formData.get('displayName') as string;
     const anniversaryDate = formData.get('anniversaryDate') as string;
 
-    let finalAvatarUrl = user?.user_metadata?.avatar_url;
+    let finalAvatarUrl = user.user_metadata?.avatar_url;
 
     if (file && file.size > 0) {
         const fileExt = file.name.split('.').pop();
@@ -96,14 +99,28 @@ export async function updateProfileAvatarAction(formData: FormData) {
 
     const { error } = await supabase.auth.updateUser({
         data: {
-            display_name: displayName || user?.user_metadata?.display_name,
+            display_name: displayName || user.user_metadata?.display_name,
             avatar_url: finalAvatarUrl,
-            anniversary_date: anniversaryDate !== undefined ? anniversaryDate : user?.user_metadata?.anniversary_date
-        }
+            anniversary_date: anniversaryDate !== undefined ? anniversaryDate : user.user_metadata?.anniversary_date,
+        },
     });
 
     if (error) {
         return { error: "Не удалось обновить профиль" };
+    }
+
+    // Keep public profiles in sync for partner-name lookups.
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+            id: userId,
+            display_name: displayName || user.user_metadata?.display_name || null,
+            avatar_url: finalAvatarUrl || null,
+            updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+
+    if (profileError) {
+        console.error("Profile upsert error", profileError);
     }
 
     return { success: true };

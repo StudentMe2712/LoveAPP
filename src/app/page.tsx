@@ -57,7 +57,6 @@ export default function Home() {
   const { theme, toggleTheme } = useTheme();
   const [displayName, setDisplayName] = useState<string>('сладкий');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [partnerName, setPartnerName] = useState<string>('');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -72,12 +71,6 @@ export default function Home() {
         if (user.user_metadata.display_name) setDisplayName(user.user_metadata.display_name);
         if (user.user_metadata.avatar_url) setAvatarUrl(user.user_metadata.avatar_url);
       }
-      // Fetch partner name via pair table
-      try {
-        const { getPartnerNameAction } = await import('@/app/actions/status');
-        const res = await getPartnerNameAction();
-        if (res.name) setPartnerName(res.name);
-      } catch { }
     };
     fetchProfile();
   }, []);
@@ -158,7 +151,7 @@ export default function Home() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
       >
-        <UserStatusWidget displayName={displayName} avatarUrl={avatarUrl} partnerName={partnerName || undefined} />
+        <UserStatusWidget displayName={displayName} avatarUrl={avatarUrl} />
       </motion.div>
 
       {/* Signal Grid – staggered cards */}

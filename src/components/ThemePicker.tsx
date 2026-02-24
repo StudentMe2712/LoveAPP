@@ -3,7 +3,7 @@ import { PALETTES, PaletteName, useTheme } from './ThemeProvider';
 import { hapticFeedback } from '@/lib/utils/haptics';
 
 export default function ThemePicker() {
-    const { palette, setPalette } = useTheme();
+    const { palette, setPalette, theme } = useTheme();
 
     return (
         <div className="flex flex-col gap-3">
@@ -13,6 +13,7 @@ export default function ThemePicker() {
             <div className="grid grid-cols-2 gap-2">
                 {PALETTES.map(p => {
                     const isActive = palette === p.name;
+                    const previewVars = theme === 'dark' ? p.darkVars : p.vars;
                     return (
                         <button
                             key={p.name}
@@ -24,9 +25,9 @@ export default function ThemePicker() {
                         >
                             {/* Color preview dots */}
                             <div className="flex gap-1 shrink-0">
-                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.vars['--bg'] }} />
-                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.vars['--accent'] }} />
-                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.vars['--accent2'] }} />
+                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: previewVars['--bg'] }} />
+                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: previewVars['--accent'] }} />
+                                <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: previewVars['--accent2'] }} />
                             </div>
                             <div className="text-left flex-1 min-w-0">
                                 <p className="text-sm font-extrabold text-[#4a403b] dark:text-[#d4c8c1] truncate">

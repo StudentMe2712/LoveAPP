@@ -129,7 +129,11 @@ function Lightbox({
         const res = await updateMomentCaptionAction(moment.id, caption);
         setSavingCaption(false);
         if (res.error) toast.error(res.error);
-        else { toast.success('Подпись сохранена ✓', { duration: 1200 }); onUpdate({ caption: caption.trim() || null }); }
+        else {
+            toast.success('Подпись сохранена ✓', { duration: 1200 });
+            onUpdate({ caption: caption.trim() || null });
+            onClose();
+        }
     };
 
     const handleLike = async () => {

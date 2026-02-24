@@ -8,6 +8,7 @@ import { hapticFeedback } from '@/lib/utils/haptics';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import confetti from 'canvas-confetti';
+import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Plan = {
     id: string;
@@ -26,6 +27,7 @@ export default function PlansList() {
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const resolvedPartnerName = useResolvedPartnerName();
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -169,13 +171,13 @@ export default function PlansList() {
                                                     onClick={() => handlePickSlot(plan.id, slot)}
                                                     disabled={isCreator}
                                                     className="text-sm px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-[#cca573] hover:text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:hover:bg-black/5 disabled:hover:text-current dark:disabled:hover:bg-white/10"
-                                                    title={isCreator ? "Партнер должен выбрать время" : "Кликни, чтобы выбрать"}
+                                                    title={isCreator ? `${resolvedPartnerName} должен(на) выбрать время` : "Кликни, чтобы выбрать"}
                                                 >
                                                     {slot}
                                                 </button>
                                             ))}
                                         </div>
-                                        {isCreator && <p className="text-xs text-[#9e6b36] mt-1 italic">≈ Ждем, пока партнер выберет удобный вариант</p>}
+                                        {isCreator && <p className="text-xs text-[#9e6b36] mt-1 italic">≈ Ждём, пока {resolvedPartnerName} выберет удобный вариант</p>}
                                     </div>
                                 )}
 

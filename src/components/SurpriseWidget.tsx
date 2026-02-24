@@ -10,6 +10,7 @@ import {
 import confetti from 'canvas-confetti';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import toast from 'react-hot-toast';
+import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Mode = 'idle' | 'instant' | 'scheduled';
 
@@ -24,6 +25,7 @@ export default function SurpriseWidget() {
     const [newText, setNewText] = useState('');
     const [scheduleTime, setScheduleTime] = useState('');   // datetime-local value
     const [sending, setSending] = useState(false);
+    const resolvedPartnerName = useResolvedPartnerName();
 
     useEffect(() => {
         let mounted = true;
@@ -195,7 +197,7 @@ export default function SurpriseWidget() {
                         <span className="text-2xl">✍️</span>
                         <div className="text-left flex-1">
                             <p className="font-bold text-sm">Спрятать сюрприз</p>
-                            <p className="text-xs opacity-50">Партнер сотрёт и увидит послание</p>
+                            <p className="text-xs opacity-50">{resolvedPartnerName} сотрёт и увидит послание</p>
                         </div>
                         <span className="text-lg opacity-30">›</span>
                     </button>
@@ -219,7 +221,7 @@ export default function SurpriseWidget() {
                     <div className="flex items-center gap-2 mb-1">
                         <span className="text-xl">{mode === 'scheduled' ? '⏰' : '✍️'}</span>
                         <p className="font-extrabold text-sm text-[#4a403b] dark:text-[#d4c8c1]">
-                            {mode === 'scheduled' ? 'Отложенное сообщение' : 'Сюрприз для партнера'}
+                            {mode === 'scheduled' ? 'Отложенное сообщение' : `Сюрприз для ${resolvedPartnerName}`}
                         </p>
                     </div>
 

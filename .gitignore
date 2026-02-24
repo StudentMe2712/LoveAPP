@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling/runtime artifacts
+.serena/
+cloudflared.exe
+cloudflared.log
+next-start.log
+next-start.err.log
+vapid_temp.txt
+disable.js
+link_users.js
