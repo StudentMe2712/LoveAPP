@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
-import Link from "next/link";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { hapticFeedback } from "@/lib/utils/haptics";
+import BackButton from "@/components/BackButton";
 
 type Moment = {
     id: string;
@@ -292,9 +292,7 @@ export default function GalleryPage() {
             {/* Header */}
             <div className="w-full max-w-md pt-12 pb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <Link href="/" className="w-10 h-10 bg-white dark:bg-[#2c2623] rounded-full flex items-center justify-center shadow-sm border border-[#e8dfd5] dark:border-[#3d332c] transition-colors shrink-0">
-                        <span className="text-xl">←</span>
-                    </Link>
+                    <BackButton href="/" className="shrink-0" />
                     <h1 className="text-2xl font-extrabold tracking-tight text-[#4a403b] dark:text-[#d4c8c1]">Галерея</h1>
                 </div>
                 <span className="text-sm font-bold text-[#9e8c84]">{moments.length} фото</span>

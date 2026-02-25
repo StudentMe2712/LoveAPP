@@ -101,6 +101,61 @@ ${context}
         };
     }
 }
+
+type QuizSuggestion = { question: string; hint?: string };
+
+function pickText(value: unknown): string | null {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+        return String(value);
+    }
+    if (value && typeof value === "object") {
+        const record = value as Record<string, unknown>;
+        const textValue = record.text;
+        if (typeof textValue === "string" && textValue.trim().length > 0) {
+            return textValue.trim();
+        }
+        for (const candidate of Object.values(record)) {
+            if (typeof candidate === "string" && candidate.trim().length > 0) {
+                return candidate.trim();
+            }
+        }
+    }
+    return null;
+}
+
+function normalizeQuizSuggestion(item: unknown): QuizSuggestion | null {
+    if (typeof item === "string") {
+        const question = item.trim();
+        return question ? { question } : null;
+    }
+    if (!item || typeof item !== "object") return null;
+
+    const record = item as Record<string, unknown>;
+    const values = Object.values(record);
+    const question =
+        pickText(record.question) ??
+        pickText(record.prompt) ??
+        pickText(record.text) ??
+        pickText(record.title) ??
+        pickText(record.q) ??
+        pickText(record.ask) ??
+        pickText(values[0]);
+
+    if (!question) return null;
+
+    const hint =
+        pickText(record.hint) ??
+        pickText(record.clue) ??
+        pickText(record.tip) ??
+        pickText(record.help) ??
+        pickText(values[1]);
+
+    return hint && hint !== question ? { question, hint } : { question };
+}
 /**
  * Generate quiz questions for the "How well do you know me?" game.
  * Returns 5 creative, personal questions the user can answer about themselves.
@@ -144,7 +199,13 @@ export async function generateQuizQuestions(): Promise<{ question: string; hint?
         // Groq returns a json_object root — handle both array wrapper and direct array
         const parsed = JSON.parse(raw);
         const arr = Array.isArray(parsed) ? parsed : (parsed.questions || parsed.items || Object.values(parsed)[0]);
-        if (Array.isArray(arr) && arr.length > 0) return arr.slice(0, 5);
+        if (Array.isArray(arr) && arr.length > 0) {
+            const normalized = arr
+                .map(normalizeQuizSuggestion)
+                .filter((item): item is QuizSuggestion => item !== null)
+                .slice(0, 5);
+            if (normalized.length > 0) return normalized;
+        }
         return fallback;
     } catch (e) {
         console.error('generateQuizQuestions error:', e);

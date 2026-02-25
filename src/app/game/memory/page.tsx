@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import confetti from 'canvas-confetti';
 import { hapticFeedback } from '@/lib/utils/haptics';
+import BackButton from '@/components/BackButton';
 
 type Card = {
     id: number;
@@ -128,7 +128,7 @@ export default function MemoryPage() {
     return (
         <main className="w-full min-h-[100dvh] flex flex-col items-center px-4 pt-12 pb-32">
             <header className="w-full flex justify-between items-center mb-6 px-2">
-                <Link href="/game" className="text-2xl opacity-80">⬅️</Link>
+                <BackButton href="/game" />
                 <h1 className="text-xl font-extrabold">Мемори 🃏</h1>
                 <button onClick={initGame} className="text-sm font-bold px-3 py-1.5 bg-[#e8dfd5] dark:bg-[#3d332c] rounded-xl active:scale-95 transition-all">Заново</button>
             </header>

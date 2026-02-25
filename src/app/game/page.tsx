@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import TicTacToeGame from '@/components/TicTacToeGame';
 import DrawingBoard from '@/components/DrawingBoard';
+import BackButton from '@/components/BackButton';
 
 export default function GameHubPage() {
     const [activeTab, setActiveTab] = useState<'tictactoe' | 'draw'>('tictactoe');
@@ -11,7 +12,7 @@ export default function GameHubPage() {
     return (
         <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32">
             <header className="w-full flex justify-between items-center mb-8">
-                <Link href="/" className="text-2xl opacity-80 hover:opacity-100 transition-opacity">⬅️</Link>
+                <BackButton href="/" />
                 <h1 className="text-2xl font-extrabold tracking-tight">Поиграем? 🧩</h1>
                 <div className="w-8" />
             </header>

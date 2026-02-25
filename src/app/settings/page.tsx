@@ -4,11 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { exportDataAction, deleteDataAction, updateProfileAvatarAction } from '@/app/actions/settings';
 import { createBrowserClient } from '@supabase/ssr';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 import PushNotificationToggle from '@/components/PushNotificationToggle';
 import ThemePicker from '@/components/ThemePicker';
 import { useTheme } from '@/components/ThemeProvider';
 import { partnerOrFallback, useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
+import BackButton from '@/components/BackButton';
 
 export default function SettingsPage() {
     const { theme, toggleTheme } = useTheme();
@@ -139,9 +139,7 @@ export default function SettingsPage() {
     return (
         <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32">
             <header className="w-full flex justify-between items-center mb-10">
-                <Link href="/" className="text-2xl opacity-80 hover:opacity-100 transition-opacity">
-                    ⬅️
-                </Link>
+                <BackButton href="/" />
                 <h1 className="text-2xl font-extrabold tracking-tight">Настройки</h1>
                 <div className="w-8"></div> {/* Spacer for centering */}
             </header>

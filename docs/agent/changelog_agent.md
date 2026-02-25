@@ -61,3 +61,8 @@
 - [Journey] Adjusted heart anchor position upward to align with the previous upper-heart spot in the road composition.
 - [Journey] Restored rich click feedback on the heart: confetti bursts, periodic WOW/firework effects, and extra floating rewards on combo milestones.
 - [Nav] Re-enabled `BottomNav` visibility on `/journey`.
+- [Journey] Raised the interactive heart position higher on the road to match the updated visual target area.
+- [UI] Added a unified `BackButton` component and replaced page-level back controls across Gallery, Journey, Game, Quiz, Memory, Settings, and Spicy screens.
+- [Journey] Replaced emoji heart glyph rendering with inline SVG heart to fix missing heart on older iOS devices (including iPhone 7+ class devices).
+- [Journey] Moved the heart anchor higher again on desktop/mobile breakpoints to match the requested road position.
+- [Quiz AI] Fixed client crash when AI returns object-shaped question fields (e.g. localized keys like `{вопрос: ...}`): server/client now normalize AI suggestions to safe strings before rendering.

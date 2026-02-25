@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import toast from 'react-hot-toast';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import { generateQuizQuestionsAction } from '@/app/actions/quiz';
 import confetti from 'canvas-confetti';
 import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
+import BackButton from '@/components/BackButton';
 
 type Question = {
     id: string;
@@ -27,6 +27,52 @@ type Answer = {
 
 function normalize(s: string) {
     return s.trim().toLowerCase().replace(/ё/g, 'е');
+}
+
+type AISuggestion = { question: string; hint?: string };
+
+function textFromUnknown(value: unknown): string | null {
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : null;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+    }
+    if (value && typeof value === 'object') {
+        const values = Object.values(value as Record<string, unknown>);
+        const firstString = values.find((entry) => typeof entry === 'string' && entry.trim().length > 0);
+        return typeof firstString === 'string' ? firstString.trim() : null;
+    }
+    return null;
+}
+
+function normalizeAISuggestions(raw: unknown): AISuggestion[] {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .map((item): AISuggestion | null => {
+            if (typeof item === 'string') {
+                const question = item.trim();
+                return question ? { question } : null;
+            }
+            if (!item || typeof item !== 'object') return null;
+            const record = item as Record<string, unknown>;
+            const values = Object.values(record);
+            const question =
+                textFromUnknown(record.question) ??
+                textFromUnknown(record.prompt) ??
+                textFromUnknown(record.text) ??
+                textFromUnknown(record.title) ??
+                textFromUnknown(values[0]);
+            if (!question) return null;
+            const hint =
+                textFromUnknown(record.hint) ??
+                textFromUnknown(record.clue) ??
+                textFromUnknown(record.tip) ??
+                textFromUnknown(values[1]);
+            return hint && hint !== question ? { question, hint } : { question };
+        })
+        .filter((item): item is AISuggestion => item !== null);
 }
 
 export default function QuizPage() {
@@ -131,9 +177,10 @@ export default function QuizPage() {
         toast.loading('AI генерирует вопросы...', { id: 'ai-gen' });
         try {
             const res = await generateQuizQuestionsAction();
-            if (res.data?.length) {
-                setAiSuggestions(res.data);
-                toast.success(`Готово! ${res.data.length} вопросов 🤖`, { id: 'ai-gen' });
+            const suggestions = normalizeAISuggestions(res.data);
+            if (suggestions.length > 0) {
+                setAiSuggestions(suggestions);
+                toast.success(`Готово! ${suggestions.length} вопросов 🤖`, { id: 'ai-gen' });
                 hapticFeedback.success();
             } else {
                 toast.error('Не удалось сгенерировать', { id: 'ai-gen' });
@@ -201,7 +248,7 @@ export default function QuizPage() {
     return (
         <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32">
             <header className="w-full flex justify-between items-center mb-6">
-                <Link href="/game" className="text-2xl opacity-80 hover:opacity-100 transition-opacity">⬅️</Link>
+                <BackButton href="/game" />
                 <h1 className="text-xl font-extrabold tracking-tight">Как ты меня знаешь? 💭</h1>
                 <div className="w-8" />
             </header>

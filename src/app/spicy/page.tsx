@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import confetti from 'canvas-confetti';
+import BackButton from '@/components/BackButton';
 
 /* ─── Data ─────────────────────────────────────────────────────────────── */
 
@@ -180,7 +180,7 @@ function CardGame({
     return (
         <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-28" style={{ background: 'var(--bg)' }}>
             <header className="w-full flex items-center gap-3 mb-8">
-                <button onClick={onBack} className="text-2xl opacity-70 active:scale-90 transition-transform">⬅️</button>
+                <BackButton onClick={onBack} />
                 <h1 className="text-xl font-extrabold" style={{ color: 'var(--text)' }}>{emoji} {title}</h1>
                 <span className="ml-auto text-xs font-bold opacity-40" style={{ color: 'var(--text)' }}>
                     {done.length + 1}/{items.length}
@@ -391,7 +391,7 @@ export default function SpicyPage() {
     return (
         <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32" style={{ background: 'var(--bg)' }}>
             <header className="w-full flex justify-between items-center mb-2">
-                <Link href="/" className="text-2xl opacity-80 active:scale-90 transition-transform">⬅️</Link>
+                <BackButton href="/" />
                 <div className="w-8" />
             </header>
 

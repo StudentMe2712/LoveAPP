@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createBrowserClient } from "@supabase/ssr";
 import confetti from "canvas-confetti";
+import BackButton from "@/components/BackButton";
 
 type TimerParts = {
     days: number;
@@ -256,12 +257,7 @@ export default function JourneyPage() {
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(22,7,30,0.14)_0%,rgba(24,8,24,0.07)_30%,rgba(16,7,17,0.42)_75%,rgba(10,5,11,0.6)_100%)]" />
 
             <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[760px] flex-col items-center px-4 pt-8 pb-10 text-white">
-                <Link
-                    href="/"
-                    className="absolute left-4 top-4 rounded-full border border-white/35 bg-black/20 px-2.5 py-1 text-sm font-black backdrop-blur-sm transition-opacity hover:opacity-90"
-                >
-                    ←
-                </Link>
+                <BackButton href="/" className="absolute left-4 top-4 z-20" />
 
                 <h1 className="journey-title mt-6 flex items-center gap-2 text-center leading-none">
                     <span className="journey-title-text">Наш Путь</span>
@@ -340,8 +336,30 @@ export default function JourneyPage() {
                             onClick={onHeartTap}
                             aria-label="Антистресс сердце"
                         >
-                            <span className="journey-heart select-none text-[170px] leading-none" aria-hidden>
-                                🩷
+                            <span className="journey-heart select-none leading-none" aria-hidden>
+                                <svg
+                                    className="journey-heart-icon"
+                                    viewBox="0 0 120 108"
+                                    role="presentation"
+                                    focusable="false"
+                                >
+                                    <defs>
+                                        <linearGradient id="journey-heart-gradient" x1="16" y1="12" x2="98" y2="98">
+                                            <stop offset="0%" stopColor="#ffd1ea" />
+                                            <stop offset="44%" stopColor="#ff6fbb" />
+                                            <stop offset="100%" stopColor="#ff3ea0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path
+                                        d="M60 104C58.9 104 57.9 103.6 57.1 102.8C33.4 81.2 18 66.9 18 50.5C18 37.1 28.4 27 41.1 27C48.6 27 55.8 30.8 60 36.8C64.2 30.8 71.4 27 78.9 27C91.6 27 102 37.1 102 50.5C102 66.9 86.6 81.2 62.9 102.8C62.1 103.6 61.1 104 60 104Z"
+                                        fill="url(#journey-heart-gradient)"
+                                    />
+                                    <path
+                                        d="M60 42C56.4 36.7 49.9 33 43.6 33C33.4 33 25.5 41.3 25.5 51.6C25.5 64.1 37.5 75.3 59.5 95.3C59.7 95.5 59.9 95.6 60 95.6V42Z"
+                                        fill="#ffd9ee"
+                                        opacity="0.32"
+                                    />
+                                </svg>
                             </span>
                         </button>
 
@@ -404,6 +422,9 @@ export default function JourneyPage() {
                 }
 
                 .journey-heart {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
                     filter:
                         drop-shadow(0 0 18px rgba(255, 178, 209, 0.82))
                         drop-shadow(0 0 34px rgba(255, 116, 173, 0.78))
@@ -411,8 +432,14 @@ export default function JourneyPage() {
                     animation: heartPulse 2.4s ease-in-out infinite;
                 }
 
+                .journey-heart-icon {
+                    width: 170px;
+                    height: auto;
+                    display: block;
+                }
+
                 .journey-heart-zone {
-                    top: clamp(56%, 61%, 67%);
+                    top: clamp(42%, 47%, 53%);
                 }
 
                 .journey-heart-btn {
@@ -535,11 +562,15 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart {
-                        font-size: 128px !important;
+                        font-size: initial;
+                    }
+
+                    .journey-heart-icon {
+                        width: 128px;
                     }
 
                     .journey-heart-zone {
-                        top: clamp(59%, 65%, 74%);
+                        top: clamp(46%, 52%, 58%);
                     }
 
                     .journey-reward-layer {
@@ -576,7 +607,11 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart-zone {
-                        top: clamp(61%, 67%, 77%);
+                        top: clamp(48%, 55%, 61%);
+                    }
+
+                    .journey-heart-icon {
+                        width: 120px;
                     }
                 }
             `}</style>
