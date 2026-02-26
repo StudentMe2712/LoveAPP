@@ -37,6 +37,22 @@ If Redis is unavailable, the app falls back safely:
 1. Signals use in-memory anti-spam.
 2. AI generation works without cache.
 
+## Shared Uploads Directory (Linux/Ubuntu support)
+
+Media uploads (chat images/voice/video and wishlist photos) use a shared filesystem path.
+
+Set this env variable to override the default Windows UNC path:
+
+1. `SHARED_UPLOADS_DIR`
+
+Example for Ubuntu (mounted SMB path):
+
+1. `SHARED_UPLOADS_DIR=/mnt/Y`
+
+If not set, the app uses the default:
+
+1. `\\itskom\\Y\\Даулет\\images`
+
 ## Section Backgrounds (except Journey)
 
 Background customization is now available per section and stored locally on each device.

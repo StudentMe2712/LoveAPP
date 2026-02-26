@@ -133,3 +133,8 @@
 - [Chat UI] Desktop interaction: the message action menu now opens via right-click (ПКМ) on message bubbles.
 - [Chat UI] Fixed desktop right-click handling using capture-phase context menu interception to suppress native browser menu on chat bubbles.
 - [Chat UI] Improved reliability of menu invocation on mobile (less strict long-press movement tolerance) and refreshed menu styling to a cleaner Telegram-like dark popup.
+
+## 0.1.16 - 2026-02-26
+- [Infra] Added `SHARED_UPLOADS_DIR` env override for shared media storage path (Linux/Ubuntu-friendly; fallback remains Windows UNC path).
+- [Wishlist] Switched wishlist photo upload path resolution to shared storage helper so Linux mount paths and chat media use a unified directory source.
+- [Docs] Added README section with Ubuntu example (`/mnt/Y`) for shared uploads configuration.

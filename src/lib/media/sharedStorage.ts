@@ -1,7 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 
-export const SHARED_UPLOADS_DIR = "\\\\itskom\\Y\\Даулет\\images";
+const DEFAULT_SHARED_UPLOADS_DIR = "\\\\itskom\\Y\\Даулет\\images";
+
+function resolveSharedUploadsDir() {
+  const fromEnv = process.env.SHARED_UPLOADS_DIR?.trim();
+  return fromEnv && fromEnv.length > 0 ? fromEnv : DEFAULT_SHARED_UPLOADS_DIR;
+}
+
+export const SHARED_UPLOADS_DIR = resolveSharedUploadsDir();
 
 type SavedFileInfo = {
   fileName: string;
@@ -55,4 +62,3 @@ export async function saveFileToSharedFolder(params: {
 export async function removeSharedFileByPath(filePath: string) {
   await fs.unlink(filePath).catch(() => undefined);
 }
-

@@ -1,11 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { SHARED_UPLOADS_DIR } from "@/lib/media/sharedStorage";
 import { revalidatePath } from "next/cache";
 import fs from "fs/promises";
 import path from "path";
-
-const UPLOADS_DIR = "\\\\itskom\\Y\\Даулет\\images";
 
 export async function addWishlistItemAction(formData: FormData) {
     try {
@@ -30,10 +29,10 @@ export async function addWishlistItemAction(formData: FormData) {
         let photoUrl: string | null = null;
         if (photo && photo.size > 0) {
             try {
-                await fs.mkdir(UPLOADS_DIR, { recursive: true }).catch(() => { });
+                await fs.mkdir(SHARED_UPLOADS_DIR, { recursive: true }).catch(() => { });
                 const fileExt = photo.name.split('.').pop() || 'jpg';
                 const fileName = `wish-${user.id}-${Date.now()}.${fileExt}`;
-                const filePath = path.join(UPLOADS_DIR, fileName);
+                const filePath = path.join(SHARED_UPLOADS_DIR, fileName);
                 const buffer = new Uint8Array(await photo.arrayBuffer());
                 await fs.writeFile(filePath, buffer);
                 photoUrl = `/api/images/${fileName}`;

@@ -44,6 +44,8 @@ next-env.d.ts
 .serena/
 cloudflared.exe
 cloudflared.log
+cloudflared.current.out
+cloudflared.current.err
 next-start.log
 next-start.err.log
 vapid_temp.txt
