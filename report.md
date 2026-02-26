@@ -1,4 +1,4 @@
-﻿# GUI-First Status Report — Nash Domik
+# GUI-First Status Report — Nash Domik
 
 Дата среза: 2026-02-25
 Целевые устройства: iPhone 7+ (iOS 15 Safari), iPhone 16 Pro Max (iOS 18 Safari)
@@ -65,3 +65,10 @@
 2. Доработать миграцию на UI-примитивы (доработать `Field/Button/Card` применение на формах settings/wishlist/quiz).
 3. Добавить визуальные smoke checks для iPhone 7+/16 Pro Max (ключевые маршруты: `/`, `/wishlist`, `/journey`, `/gallery`, `/game/quiz`, `/settings`).
 4. Подключить `@serwist/next/typings` в `tsconfig` (чтобы убрать warning из build).
+
+## Chat MVP (2026-02-26)
+- Добавлен новый раздел `/chat` с realtime-чатом для пары: отправка/получение текста, typing-индикатор, статусы прочтения `✓/✓✓`, optimistic send.
+- Добавлены server actions для чата: bootstrap + пагинация, отправка, mark-as-read, AI-совет по контексту с подстановкой имени партнёра.
+- Имена/аватары берутся из `profiles` (fallback сохранён).
+- В `BottomNav` добавлена вкладка `Чат`, обновлён порядок свайпов: `Дом -> Чат -> Вишлист -> Наш путь -> Вместе -> Для двоих`.
+- Система фоновых тем по разделам расширена новым ключом `chat`.

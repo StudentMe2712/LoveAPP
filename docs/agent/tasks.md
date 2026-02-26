@@ -74,3 +74,4 @@ Legend: `TODO | DOING | DONE | BLOCKED`
 - [TODO] T0606 Plans UX: Improve slot selection design to make it intuitive
 - [TODO] T0607 Notifications Bell: Add a dropdown/modal to show recent signals/notifications
 - [TODO] T0608 Notification CRON: Implement periodic Telegram reminders for upcoming plans (24h, 12h, 6h, 3h, 1h, 30m) and inactivity reminders (1h+)
+- [DONE] T0609 Chat MVP: Add pair-only realtime text chat page with typing/read status, AI advice bubble, BottomNav tab, and swipe order update

@@ -1,5 +1,6 @@
 export const SECTION_KEYS = [
   "home",
+  "chat",
   "wishlist",
   "gallery",
   "game",

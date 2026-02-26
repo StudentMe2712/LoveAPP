@@ -21,6 +21,7 @@ import type {
 
 const SECTION_OPTIONS: Array<{ key: SectionKey; label: string; emoji: string }> = [
   { key: "home", label: "Дом", emoji: "🏠" },
+  { key: "chat", label: "Чат", emoji: "💬" },
   { key: "wishlist", label: "Вишлист", emoji: "🖤" },
   { key: "gallery", label: "Галерея", emoji: "📷" },
   { key: "game", label: "Игры", emoji: "🎮" },

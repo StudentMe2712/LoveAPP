@@ -99,3 +99,37 @@
 - [UI] Removed hardcoded root background fills on `plans`, `gallery`, `login`, `pair`, and spicy root containers so section backgrounds can be visible.
 - [PWA] Hardened stale-cache protection for local production runs: Service Worker cleanup/disable now applies on `localhost` and `127.0.0.1` (in addition to tunnel), preventing recurring `bad-precaching-response` and chunk 404 loops after rebuilds.
 
+## 0.1.12 - 2026-02-26
+- [Chat] Added new `/chat` page for pair-only realtime text chat (messages, typing indicator, read status with single/double checks, optimistic send + rollback).
+- [Chat] Added chat server actions: bootstrap (last 50 + pagination), send message, mark read, and contextual AI advice with partner-name substitution.
+- [Chat] Chat header now resolves partner avatar/name from `profiles` and shows online state based on `user_statuses.updated_at`.
+- [Nav] Added `Чат` tab to bottom navigation and updated swipe order to `/ -> /chat -> /wishlist -> /journey -> /plans -> /spicy`.
+- [Backgrounds] Extended section background system with `chat` key and settings selector option so chat can use its own background independently.
+- [DB] Added migration `20260226120000_chat_messages.sql` with RLS pair isolation, indexes, read-only update guard for `read_at`, and realtime publication for `chat_messages`.
+
+## 0.1.13 - 2026-02-26
+- [Presence] Added `public.user_presence` with RLS + realtime and implemented heartbeat endpoint `POST /api/presence/ping` (visible app sends pings every 30s).
+- [Chat] Extended `chat_messages` for media (`image`, `voice`, `video_note`) with validation constraints and immutable payload updates (only `read_at` is mutable).
+- [Chat] Added `POST /api/chat/media` with size/duration limits, optimistic UI integration, and compensation rollback on failed post-save steps.
+- [Media] Added shared filesystem storage helper and `GET /api/media/[filename]` serving route (shared directory: `\\itskom\\Y\\Даулет\\images`).
+- [Gallery Sync] Chat image messages now auto-create `moments` records with empty caption (`null`) so images appear in `/gallery`.
+- [Plans] Implemented instant `/plans` UX: create returns `plan`, local `plans:created` event inserts immediately, delete is optimistic with rollback and per-item pending lock.
+- [Encoding] Fixed broken UTF-8 strings in `SectionBackgroundSettings` and preserved the new `chat` section option.
+- [Infra] Added repository-level encoding safeguards: `.editorconfig` (UTF-8/LF defaults) and `scripts/encoding_gate.py`, integrated into `qa_gate.ps1`.
+- [Infra] Removed UTF-8 BOM from critical UI files (`/gallery`, `/game/quiz`, `/login`, `BackButton`, `ThemeProvider`) to prevent future mojibake regressions.
+
+## 0.1.14 - 2026-02-26
+- [Chat UX] Image sending now uses preview-before-send flow with optional caption text; image is sent only after explicit confirmation.
+- [Chat UX] Chat images now open in dedicated full-screen route `/chat/media/[id]` (messenger-like viewer with back navigation).
+- [Chat UI] Composer controls updated to messenger-style interactions: paperclip attachment button plus hold-to-record voice/video-note buttons.
+- [Chat] Added reply flow (`reply_to_id`) with reply preview in bubbles and composer.
+- [Chat] Added message edit and soft-delete for sender messages; deleted messages render as “Сообщение удалено”.
+- [DB] Added migration `20260226150000_chat_message_actions.sql` for reply/edit/delete columns, RLS update policies, and trigger rules for safe update semantics.
+
+## 0.1.15 - 2026-02-26
+- [Chat UI] Replaced inline message links with a Telegram-like contextual popup menu for `Ответить / Изменить / Удалить`.
+- [Chat UI] Added close-on-outside-click and `Esc` behavior for the contextual menu.
+- [Chat UI] Added mobile long-press on message bubbles (with movement threshold + light haptic feedback) to open the action menu.
+- [Chat UI] Desktop interaction: the message action menu now opens via right-click (ПКМ) on message bubbles.
+- [Chat UI] Fixed desktop right-click handling using capture-phase context menu interception to suppress native browser menu on chat bubbles.
+- [Chat UI] Improved reliability of menu invocation on mobile (less strict long-press movement tolerance) and refreshed menu styling to a cleaner Telegram-like dark popup.

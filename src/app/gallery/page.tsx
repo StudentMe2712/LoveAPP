@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";

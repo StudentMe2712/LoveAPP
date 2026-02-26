@@ -8,6 +8,7 @@ export function resolveSectionKey(pathname: string): SectionKey | null {
   if (!pathname) return null;
 
   if (isExactOrNested(pathname, "/journey")) return null;
+  if (isExactOrNested(pathname, "/chat")) return "chat";
   if (isExactOrNested(pathname, "/game")) return "game";
   if (isExactOrNested(pathname, "/wishlist")) return "wishlist";
   if (isExactOrNested(pathname, "/gallery")) return "gallery";

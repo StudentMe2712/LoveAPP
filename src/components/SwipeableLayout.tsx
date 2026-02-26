@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 const ROUTES = [
     '/',
+    '/chat',
     '/wishlist',
     '/journey',
     '/plans',

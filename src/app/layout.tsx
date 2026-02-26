@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import SwipeableLayout from "@/components/SwipeableLayout";
 import BottomNav from "@/components/BottomNav";
 import PwaDevCleanup from "@/components/PwaDevCleanup";
 import SectionBackgroundLayer from "@/components/SectionBackgroundLayer";
+import PresenceHeartbeat from "@/components/PresenceHeartbeat";
 import "./globals.css";
 
 const nunito = Nunito({ subsets: ["cyrillic", "latin"], weight: ["400", "700", "800"] });
@@ -17,8 +19,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#f5eedc",
 };
-
-import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -33,6 +33,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <PwaDevCleanup />
+          <PresenceHeartbeat />
           <SectionBackgroundLayer />
           <div className="relative z-10">
             <SwipeableLayout>
