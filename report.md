@@ -1,76 +1,67 @@
-﻿Краткий отчёт по остальному (вне 4 пунктов, не исправлял)
+﻿# GUI-First Status Report — Nash Domik
 
-eslint: 68 проблем (42 errors, 26 warnings).
+Дата среза: 2026-02-25
+Целевые устройства: iPhone 7+ (iOS 15 Safari), iPhone 16 Pro Max (iOS 18 Safari)
 
-Список lint-проблем (68):
-1. C:\Users\Heart\Desktop\nash-domik-pwa\disable.js:1:12 [error] @typescript-eslint/no-require-imports - A `require()` style import is forbidden.
-2. C:\Users\Heart\Desktop\nash-domik-pwa\disable.js:2:14 [error] @typescript-eslint/no-require-imports - A `require()` style import is forbidden.
-3. C:\Users\Heart\Desktop\nash-domik-pwa\disable.js:3:7 [warning] @typescript-eslint/no-unused-vars - 'd' is assigned a value but never used.
-4. C:\Users\Heart\Desktop\nash-domik-pwa\link_users.js:1:26 [error] @typescript-eslint/no-require-imports - A `require()` style import is forbidden.
-5. C:\Users\Heart\Desktop\nash-domik-pwa\link_users.js:2:1 [error] @typescript-eslint/no-require-imports - A `require()` style import is forbidden.
-6. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\ai.ts:4:10 [warning] @typescript-eslint/no-unused-vars - 'generateHomeInsight' is defined but never used.
-7. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\ai.ts:52:40 [warning] @typescript-eslint/no-unused-vars - 'pairError' is assigned a value but never used.
-8. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\ai.ts:58:13 [error] prefer-const - 'partnerTelegramId' is never reassigned. Use 'const' instead.
-9. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\auth.ts:4:10 [warning] @typescript-eslint/no-unused-vars - 'headers' is defined but never used.
-10. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\auth.ts:53:9 [error] prefer-const - 'userId' is never reassigned. Use 'const' instead.
-11. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\auth.ts:70:21 [warning] @typescript-eslint/no-unused-vars - 'user' is assigned a value but never used.
-12. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\auth.ts:71:9 [error] prefer-const - 'userId' is never reassigned. Use 'const' instead.
-13. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\moments.ts:14:13 [error] prefer-const - 'userId' is never reassigned. Use 'const' instead.
-14. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\settings.ts:69:9 [error] prefer-const - 'userId' is never reassigned. Use 'const' instead.
-15. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\signals.ts:16:40 [warning] @typescript-eslint/no-unused-vars - 'authError' is assigned a value but never used.
-16. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\tictactoe.ts:10:11 [error] prefer-const - 'data' is never reassigned. Use 'const' instead.
-17. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\actions\tictactoe.ts:10:17 [error] prefer-const - 'error' is never reassigned. Use 'const' instead.
-18. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\api\cron\route.ts:77:19 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-19. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\api\images\[filename]\route.ts:26:14 [warning] @typescript-eslint/no-unused-vars - 'e' is defined but never used.
-20. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\api\notifications\smart\route.ts:4:10 [warning] @typescript-eslint/no-unused-vars - 'checkPairAction' is defined but never used.
-21. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\api\push\subscribe\route.ts:44:30 [warning] @typescript-eslint/no-unused-vars - 'req' is defined but never used.
-22. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\gallery\page.tsx:99:5 [warning] @typescript-eslint/no-unused-vars - 'isOwner' is defined but never used.
-23. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\memory\page.tsx:77:23 [error] react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders  Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes.  Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).  C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\memory\page.tsx:77:23   75 |     }, [supabase]);   76 | > 77 |     useEffect(() => { initGame(); }, []);      |                       ^^^^^^^^ Avoid calling setState() directly within an effect   78 |   79 |     const handleCardClick = useCallback((cardId: number) => {   80 |         if (isChecking) return;
-24. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\memory\page.tsx:77:38 [warning] react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'initGame'. Either include it or remove the dependency array.
-25. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\memory\page.tsx:178:39 [warning] @next/next/no-img-element - Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
-26. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\quiz\page.tsx:104:8 [warning] react-hooks/exhaustive-deps - React Hook useEffect has missing dependencies: 'fetchData' and 'supabase'. Either include them or remove the dependency array.
-27. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\game\quiz\page.tsx:218:81 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-28. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\journey\page.tsx:43:8 [warning] react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'supabase.auth'. Either include it or remove the dependency array.
-29. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\login\page.tsx:11:12 [warning] @typescript-eslint/no-unused-vars - 'sent' is assigned a value but never used.
-30. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\login\page.tsx:11:18 [warning] @typescript-eslint/no-unused-vars - 'setSent' is assigned a value but never used.
-31. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\login\page.tsx:30:23 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-32. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\settings\page.tsx:102:18 [warning] @typescript-eslint/no-unused-vars - 'e' is defined but never used.
-33. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\settings\page.tsx:125:18 [warning] @typescript-eslint/no-unused-vars - 'e' is defined but never used.
-34. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\spicy\page.tsx:118:19 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-35. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\spicy\page.tsx:119:24 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-36. C:\Users\Heart\Desktop\nash-domik-pwa\src\app\spicy\page.tsx:123:40 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-37. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:25:44 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-38. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:37:38 [error] react-hooks/immutability - Error: Cannot access variable before it is declared  `colors` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:37:38   35 |                 setMyId(user.id);   36 |                 setMyName(user.user_metadata?.display_name || 'Р’С‹'); > 37 |                 myColorRef.current = colors[parseInt(user.id.substring(0, 8), 16) % colors.length] || '#e07a5f';      |                                      ^^^^^^ `colors` accessed before it is declared   38 |             }   39 |         });   40 |         checkPairAction().then(res => {  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:237:5   235 |     };   236 | > 237 |     const colors = ['#cca573', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f', '#1a1614', '#ffffff'];       |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `colors` is declared here   238 |   239 |     return (   240 |         <div className="w-full flex flex-col items-center gap-4">
-39. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:43:8 [warning] react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'colors'. Either include it or remove the dependency array.
-40. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:107:9 [error] react-hooks/immutability - Error: Cannot access variable before it is declared  `redrawCanvas` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:107:9   105 |   106 |     useEffect(() => { > 107 |         redrawCanvas();       |         ^^^^^^^^^^^^ `redrawCanvas` accessed before it is declared   108 |     }, [strokes]);   109 |   110 |     const redrawCanvas = () => {  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:110:5   108 |     }, [strokes]);   109 | > 110 |     const redrawCanvas = () => {       |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 111 |         const canvas = canvasRef.current;       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 112 |         if (!canvas) return;       вЂ¦       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 126 |         }       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 127 |     };       | ^^^^^^^ `redrawCanvas` is declared here   128 |   129 |     const drawStrokeToCanvas = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {   130 |         if (stroke.points.length === 0) return;
-41. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:108:8 [warning] react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'redrawCanvas'. Either include it or remove the dependency array.
-42. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:292:33 [error] react-hooks/purity - Error: Cannot call impure function during render  `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\DrawingBoard.tsx:292:33   290 |                     if (id === myId || cursor.trail.length === 0) return null;   291 |                     const head = cursor.trail[cursor.trail.length - 1]; // Latest position > 292 |                     const now = Date.now();       |                                 ^^^^^^^^^^ Cannot call impure function   293 |   294 |                     return (   295 |                         <div key={id} className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
-43. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\MomentsFeed.tsx:75:18 [warning] @typescript-eslint/no-unused-vars - 'err' is defined but never used.
-44. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\MomentUploader.tsx:41:18 [warning] @typescript-eslint/no-unused-vars - 'e' is defined but never used.
-45. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\PlansWidget.tsx:6:40 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-46. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\PushNotificationToggle.tsx:23:47 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-47. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\PushNotificationToggle.tsx:42:46 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-48. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\SurpriseWidget.tsx:20:46 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-49. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\SurpriseWidget.tsx:159:34 [error] react-hooks/purity - Error: Cannot call impure function during render  `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\SurpriseWidget.tsx:159:34   157 |   158 |     // Min datetime value = now + 5 minutes > 159 |     const minDatetime = new Date(Date.now() + 5 * 60 * 1000)       |                                  ^^^^^^^^^^ Cannot call impure function   160 |         .toISOString().slice(0, 16);   161 |   162 |     // --- Scratch card mode (there's a surprise to reveal) ---
-50. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\ThemeProvider.tsx:160:9 [error] react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders  Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes.  Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\ThemeProvider.tsx:160:9   158 |   159 |     useEffect(() => { > 160 |         setMounted(true);       |         ^^^^^^^^^^ Avoid calling setState() directly within an effect   161 |         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;   162 |         const savedPalette = (localStorage.getItem('palette') as PaletteName | null) || 'warm';   163 |
-51. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TicTacToeGame.tsx:21:42 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-52. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TicTacToeGame.tsx:22:44 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
-53. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TicTacToeGame.tsx:73:9 [error] react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders  Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes.  Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TicTacToeGame.tsx:73:9   71 |   72 |         ch.subscribe(); > 73 |         setChannel(ch);      |         ^^^^^^^^^^ Avoid calling setState() directly within an effect   74 |   75 |         return () => { supabase.removeChannel(ch); };   76 |     }, [pairId, supabase]);
-54. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:51:9 [error] prefer-const - 'years' is never reassigned. Use 'const' instead.
-55. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:52:9 [error] prefer-const - 'dateAfterYears' is never reassigned. Use 'const' instead.
-56. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:55:9 [error] prefer-const - 'days' is never reassigned. Use 'const' instead.
-57. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:56:9 [error] prefer-const - 'dateAfterDays' is never reassigned. Use 'const' instead.
-58. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:59:9 [error] prefer-const - 'hours' is never reassigned. Use 'const' instead.
-59. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:60:9 [error] prefer-const - 'dateAfterHours' is never reassigned. Use 'const' instead.
-60. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:63:9 [error] prefer-const - 'minutes' is never reassigned. Use 'const' instead.
-61. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:64:9 [error] prefer-const - 'dateAfterMinutes' is never reassigned. Use 'const' instead.
-62. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\TimeTogetherWidget.tsx:67:9 [error] prefer-const - 'seconds' is never reassigned. Use 'const' instead.
-63. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:7:10 [warning] @typescript-eslint/no-unused-vars - 'formatDistanceToNow' is defined but never used.
-64. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:7:31 [warning] @typescript-eslint/no-unused-vars - 'parseISO' is defined but never used.
-65. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:8:10 [warning] @typescript-eslint/no-unused-vars - 'ru' is defined but never used.
-66. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:60:9 [error] react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders  Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes.  Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).  C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:60:9   58 |   59 |     useEffect(() => { > 60 |         fetchStatuses();      |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect   61 |   62 |         const channel = supabase.channel('public:user_statuses')   63 |             .on(
-67. C:\Users\Heart\Desktop\nash-domik-pwa\src\components\UserStatusWidget.tsx:143:25 [warning] @next/next/no-img-element - Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
-68. C:\Users\Heart\Desktop\nash-domik-pwa\src\lib\notifications\webpush.ts:56:19 [error] @typescript-eslint/no-explicit-any - Unexpected any. Specify a different type.
+## Что сделано (реально внедрено)
 
-task_gate: невалидные строки в tasks.md–tasks.md.
-Warning Next.js: middleware deprecated → proxy.
+### 1) Минимальная infra-база для стабильного GUI
+- `docs/agent/tasks.md`: формат задач T0601–T0608 приведен к gate-валидному (`[TODO]`).
+- `scripts/qa_gate.ps1`: сделан fail-fast по exit-code для `python/npm` шагов, убран ложный pass при падениях.
+- `eslint.config.mjs`: локальные helper-скрипты исключены из lint-потока (`disable.js`, `link_users.js`).
+- Миграция `middleware -> proxy` завершена: используется `src/proxy.ts`, `src/middleware.ts` удален.
+
+### 2) P0 GUI stability (runtime + lint errors)
+- Закрыты блокирующие lint errors в критичных UI-модулях (`Journey`, `Memory`, `ThemeProvider`, `UserStatusWidget`, `PlansWidget`, quiz/spicy/login/push/cron/webpush и др.).
+- `ThemeProvider`: убран `mounted`-антипаттерн, инициализация темы/палитры переведена на safe lazy-init.
+- `UserStatusWidget`: стабилизирован клиент Supabase (`useMemo`), исправлен lifecycle загрузки статусов, аватар переведен на `next/image`.
+- `MemoryPage`: исправлен старт инициализации игры (без cascade lint-ошибки), карточки с фото переведены на `next/image`.
+- `JourneyPage`: убран cascade effect для auto-level; прогресс турбо перенесен в flow обновления score.
+- `qa_gate`, `build` и `lint` проходят (lint без errors).
+
+### 3) P1 GUI consistency polish
+- Добавлены дизайн-токены в `globals.css`:
+  - spacing `--space-1..8`
+  - radii `--radius-sm/md/lg/xl`
+  - shadows `--shadow-soft`, `--shadow-card`
+  - text tokens `--text-title/subtitle/body/caption`
+- Добавлены UI-примитивы в `src/components/ui/`:
+  - `Card.tsx`
+  - `Button.tsx`
+  - `Field.tsx`
+  - `StateBlock.tsx`
+- Частичная миграция приоритетных экранов на примитивы:
+  - `/journey` (fallback card)
+  - `/gallery` (state blocks + card tiles)
+  - `/wishlist` (button + empty state)
+  - `/game/quiz` (loading state block)
+  - `/settings` (theme card + image component)
+- `BackButton` унифицирован по виду и touch-target (44px+), теперь единый на внутренних страницах.
+
+### 4) Device hardening (iPhone 7+ / 16 Pro Max)
+- Добавлены safe-area утилиты (`app-safe-top`, `app-safe-bottom`) и применены на целевых страницах.
+- `BottomNav` учитывает `env(safe-area-inset-bottom)`.
+- `SwipeableLayout` ужесточен (threshold + diagonal filter), чтобы снизить случайные свайпы.
+- Для `/journey` сердце поднято и привязано через `bottom` + safe-area, чтобы не теряться на низких экранах.
+- Добавлена поддержка reduced-motion (глобально + на ключевых анимациях `/journey`).
+
+## Актуальная перепроверка
+- `npm run -s lint`: 0 errors, 7 warnings.
+- `npm run -s build`: PASS.
+- `./scripts/qa_gate.ps1`: PASS.
+
+## Что осталось (не блокирует релиз GUI-пакета)
+- Lint warnings (7 шт.) в нецелевых/вторичных местах:
+  - `src/app/actions/signals.ts`
+  - `src/app/api/images/[filename]/route.ts`
+  - `src/app/api/notifications/smart/route.ts`
+  - `src/app/api/push/subscribe/route.ts`
+  - `src/app/gallery/page.tsx` (unused `isOwner` prop в `Lightbox`)
+  - `src/components/MomentUploader.tsx`
+  - `src/components/MomentsFeed.tsx`
+
+## Следующие GUI-шаги (рекомендованный порядок)
+1. Добить 7 warnings до нуля.
+2. Доработать миграцию на UI-примитивы (доработать `Field/Button/Card` применение на формах settings/wishlist/quiz).
+3. Добавить визуальные smoke checks для iPhone 7+/16 Pro Max (ключевые маршруты: `/`, `/wishlist`, `/journey`, `/gallery`, `/game/quiz`, `/settings`).
+4. Подключить `@serwist/next/typings` в `tsconfig` (чтобы убрать warning из build).

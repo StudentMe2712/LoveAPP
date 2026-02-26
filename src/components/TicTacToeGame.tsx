@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { checkPairAction } from '@/app/actions/auth';
 import { getTicTacToeScoreAction, incrementTicTacToeScoreAction } from '@/app/actions/tictactoe';
 import toast from 'react-hot-toast';
@@ -10,6 +11,10 @@ import confetti from 'canvas-confetti';
 import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Player = 'X' | 'O' | null;
+type TicTacToeScores = {
+    user1_score: number;
+    user2_score: number;
+};
 
 export default function TicTacToeGame() {
     const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
@@ -18,8 +23,8 @@ export default function TicTacToeGame() {
     const [myPlayerSymbol, setMyPlayerSymbol] = useState<'X' | 'O' | null>(null);
     const [myName, setMyName] = useState<string>('');
     const [myId, setMyId] = useState<string | null>(null);
-    const [scores, setScores] = useState<any>(null);
-    const [channel, setChannel] = useState<any>(null);
+    const [scores, setScores] = useState<TicTacToeScores | null>(null);
+    const channelRef = useRef<RealtimeChannel | null>(null);
     const resolvedPartnerName = useResolvedPartnerName();
 
     const supabase = createBrowserClient(
@@ -70,9 +75,12 @@ export default function TicTacToeGame() {
         });
 
         ch.subscribe();
-        setChannel(ch);
+        channelRef.current = ch;
 
-        return () => { supabase.removeChannel(ch); };
+        return () => {
+            supabase.removeChannel(ch);
+            channelRef.current = null;
+        };
     }, [pairId, supabase]);
 
     const calculateWinner = (squares: Player[]) => {
@@ -118,6 +126,7 @@ export default function TicTacToeGame() {
             }
             if (newResult.winner === myPlayerSymbol && pairId && myId) {
                 incrementTicTacToeScoreAction(pairId, myId).then(res => {
+                    const channel = channelRef.current;
                     if (res.scores && channel) {
                         setScores(res.scores);
                         channel.send({
@@ -130,6 +139,7 @@ export default function TicTacToeGame() {
             }
         }
 
+        const channel = channelRef.current;
         if (channel) {
             channel.send({
                 type: 'broadcast',
@@ -143,6 +153,7 @@ export default function TicTacToeGame() {
         const startX = Math.random() < 0.5; // random who goes first
         setBoard(Array(9).fill(null));
         setXIsNext(startX);
+        const channel = channelRef.current;
         if (channel) {
             channel.send({
                 type: 'broadcast',

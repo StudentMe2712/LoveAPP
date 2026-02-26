@@ -13,11 +13,15 @@ import toast from 'react-hot-toast';
 import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 type Mode = 'idle' | 'instant' | 'scheduled';
+type SurpriseItem = {
+    id: string;
+    content_text: string;
+};
 
 export default function SurpriseWidget() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [surprise, setSurprise] = useState<any>(null);
+    const [surprise, setSurprise] = useState<SurpriseItem | null>(null);
     const [isScratched, setIsScratched] = useState(false);
 
     // Creation state
@@ -25,12 +29,15 @@ export default function SurpriseWidget() {
     const [newText, setNewText] = useState('');
     const [scheduleTime, setScheduleTime] = useState('');   // datetime-local value
     const [sending, setSending] = useState(false);
+    const [minDatetime] = useState(() => new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16));
     const resolvedPartnerName = useResolvedPartnerName();
 
     useEffect(() => {
         let mounted = true;
         getUnrevealedSurpriseAction().then(res => {
-            if (mounted && res.surprise) setSurprise(res.surprise);
+            const raw = res.surprise as Partial<SurpriseItem> | null;
+            if (!mounted || !raw?.id || !raw?.content_text) return;
+            setSurprise({ id: String(raw.id), content_text: String(raw.content_text) });
         });
         return () => { mounted = false; };
     }, []);
@@ -154,10 +161,6 @@ export default function SurpriseWidget() {
             toast.error(res.error || 'Ошибка');
         }
     };
-
-    // Min datetime value = now + 5 minutes
-    const minDatetime = new Date(Date.now() + 5 * 60 * 1000)
-        .toISOString().slice(0, 16);
 
     // --- Scratch card mode (there's a surprise to reveal) ---
     if (surprise) {

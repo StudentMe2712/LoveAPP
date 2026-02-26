@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function signInWithPasswordAction(username: string, pass: string) {
@@ -50,7 +49,7 @@ export async function signOutAction() {
 export async function checkPairAction() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    let userId = user?.id || "00000000-0000-0000-0000-000000000000";
+    const userId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     const { data: pair } = await supabase
         .from('pair')
@@ -68,7 +67,7 @@ export async function checkPairAction() {
 export async function joinPairAction(partnerId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    let userId = "00000000-0000-0000-0000-000000000000";
+    const userId = user?.id || "00000000-0000-0000-0000-000000000000";
 
     if (userId === partnerId) {
         return { error: "Нельзя создать пару с самим собой!" };

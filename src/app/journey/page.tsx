@@ -6,6 +6,7 @@ import Image from "next/image";
 import { createBrowserClient } from "@supabase/ssr";
 import confetti from "canvas-confetti";
 import BackButton from "@/components/BackButton";
+import Card from "@/components/ui/Card";
 
 type TimerParts = {
     days: number;
@@ -45,7 +46,7 @@ export default function JourneyPage() {
     const [startedAt, setStartedAt] = useState<Date | null>(null);
     const [now, setNow] = useState(() => new Date());
     const [loading, setLoading] = useState(true);
-    const [heartScore, setHeartScore] = useState(0);
+    const heartScoreRef = useRef(0);
     const autoClickEnabled = true;
     const [autoLevel, setAutoLevel] = useState(1);
     const [floatingRewards, setFloatingRewards] = useState<FloatingReward[]>([]);
@@ -54,6 +55,7 @@ export default function JourneyPage() {
     const lastTapRef = useRef(0);
     const comboRef = useRef(0);
     const autoTickRef = useRef(0);
+    const autoLevelRef = useRef(1);
     const tapFlashTimeoutRef = useRef<number | null>(null);
 
     const supabase = useMemo(
@@ -176,13 +178,33 @@ export default function JourneyPage() {
         }, 160);
     }, []);
 
+    const maybeUpgradeAutoLevel = useCallback(
+        (nextScore: number) => {
+            const currentLevel = autoLevelRef.current;
+            if (currentLevel === 1 && nextScore >= 25) {
+                autoLevelRef.current = 2;
+                setAutoLevel(2);
+                pushFloatingReward("Турбо x2");
+                return;
+            }
+            if (currentLevel === 2 && nextScore >= 80) {
+                autoLevelRef.current = 3;
+                setAutoLevel(3);
+                pushFloatingReward("Турбо x3");
+            }
+        },
+        [pushFloatingReward],
+    );
+
     const onHeartTap = useCallback(() => {
         const nowMs = Date.now();
         const nextCombo = nowMs - lastTapRef.current <= 1400 ? comboRef.current + 1 : 1;
         lastTapRef.current = nowMs;
         comboRef.current = nextCombo;
         const gain = nextCombo >= 14 ? 3 : nextCombo >= 7 ? 2 : 1;
-        setHeartScore((current) => current + gain);
+        const nextScore = heartScoreRef.current + gain;
+        heartScoreRef.current = nextScore;
+        maybeUpgradeAutoLevel(nextScore);
         pushFloatingReward(`+${gain} ❤️`);
 
         if (Math.random() < 0.22) {
@@ -191,7 +213,7 @@ export default function JourneyPage() {
 
         launchWowEffects(nextCombo);
         triggerTapFlash();
-    }, [launchWowEffects, pushFloatingReward, triggerTapFlash]);
+    }, [launchWowEffects, maybeUpgradeAutoLevel, pushFloatingReward, triggerTapFlash]);
 
     useEffect(() => {
         const interval = window.setInterval(() => {
@@ -203,20 +225,26 @@ export default function JourneyPage() {
     }, []);
 
     useEffect(() => {
+        autoLevelRef.current = autoLevel;
+    }, [autoLevel]);
+
+    useEffect(() => {
         if (!autoClickEnabled) return;
 
-        const stepMs = Math.max(650, 1300 - autoLevel * 200);
+        const stepMs = Math.max(650, 1300 - autoLevelRef.current * 200);
         const interval = window.setInterval(() => {
-            setHeartScore((current) => current + autoLevel);
+            const nextScore = heartScoreRef.current + autoLevelRef.current;
+            heartScoreRef.current = nextScore;
+            maybeUpgradeAutoLevel(nextScore);
             autoTickRef.current += 1;
 
             if (autoTickRef.current % 3 === 0) {
-                pushFloatingReward(`+${autoLevel} авто`);
+                pushFloatingReward(`+${autoLevelRef.current} авто`);
             }
         }, stepMs);
 
         return () => window.clearInterval(interval);
-    }, [autoClickEnabled, autoLevel, pushFloatingReward]);
+    }, [autoClickEnabled, autoLevel, maybeUpgradeAutoLevel, pushFloatingReward]);
 
     useEffect(
         () => () => {
@@ -226,19 +254,6 @@ export default function JourneyPage() {
         },
         [],
     );
-
-    // Keep turbo progression even without visible control buttons.
-    useEffect(() => {
-        if (autoLevel === 1 && heartScore >= 25) {
-            setAutoLevel(2);
-            pushFloatingReward("Турбо x2");
-            return;
-        }
-        if (autoLevel === 2 && heartScore >= 80) {
-            setAutoLevel(3);
-            pushFloatingReward("Турбо x3");
-        }
-    }, [autoLevel, heartScore, pushFloatingReward]);
 
     const timer = startedAt ? buildTimer(startedAt, now) : null;
     const journeyBgSrc = "/journey-bg.png";
@@ -270,15 +285,15 @@ export default function JourneyPage() {
                     {loading ? (
                         <div className="mt-8 h-24 w-[90%] max-w-[620px] animate-pulse rounded-2xl bg-white/20" />
                     ) : !timer ? (
-                        <div className="mt-8 rounded-2xl border border-white/35 bg-black/22 px-5 py-4 text-center backdrop-blur-[2px]">
+                        <Card className="mt-8 border-white/35 bg-black/22 px-5 py-4 text-center backdrop-blur-[2px]">
                             <p className="text-base font-bold">Укажи дату начала отношений в настройках.</p>
                             <Link
                                 href="/settings"
-                                className="mt-3 inline-flex rounded-xl border border-white/45 bg-white/10 px-4 py-2 text-sm font-black uppercase tracking-wide"
+                                className="touch-target mt-3 inline-flex items-center justify-center rounded-[var(--radius-lg)] border border-white/45 bg-white/10 px-4 py-2 text-sm font-black uppercase tracking-wide"
                             >
                                 Открыть настройки
                             </Link>
-                        </div>
+                        </Card>
                     ) : (
                         <div
                             className="mt-8 grid w-full max-w-[700px] grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-end gap-x-1 text-center"
@@ -439,7 +454,7 @@ export default function JourneyPage() {
                 }
 
                 .journey-heart-zone {
-                    top: clamp(42%, 47%, 53%);
+                    bottom: clamp(200px, calc(28vh + env(safe-area-inset-bottom, 0px)), 280px);
                 }
 
                 .journey-heart-btn {
@@ -570,7 +585,7 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart-zone {
-                        top: clamp(46%, 52%, 58%);
+                        bottom: clamp(170px, calc(24vh + env(safe-area-inset-bottom, 0px)), 240px);
                     }
 
                     .journey-reward-layer {
@@ -607,11 +622,21 @@ export default function JourneyPage() {
                     }
 
                     .journey-heart-zone {
-                        top: clamp(48%, 55%, 61%);
+                        bottom: clamp(150px, calc(22vh + env(safe-area-inset-bottom, 0px)), 210px);
                     }
 
                     .journey-heart-icon {
                         width: 120px;
+                    }
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .journey-heart {
+                        animation: none;
+                    }
+
+                    .journey-reward {
+                        animation-duration: 0.8s;
                     }
                 }
             `}</style>

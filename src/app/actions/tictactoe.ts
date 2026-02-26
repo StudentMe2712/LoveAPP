@@ -7,7 +7,7 @@ export async function getTicTacToeScoreAction(pairId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: "Необходима авторизация" };
 
-    let { data, error } = await supabase
+    const { data, error } = await supabase
         .from('tictactoe_scores')
         .select('*')
         .eq('pair_id', pairId)

@@ -58,6 +58,7 @@ export async function getUserStatusesAction() {
 
     const { userId, pair } = await checkPairAction();
     if (!userId || !pair) return { error: 'Not authenticated or no pair' };
+    const partnerId = pair.user1_id === userId ? pair.user2_id : pair.user1_id;
 
     const { data, error } = await supabase
         .from('user_statuses')
@@ -69,7 +70,18 @@ export async function getUserStatusesAction() {
         return { error: 'Failed to fetch statuses', statuses: [] };
     }
 
-    return { statuses: data || [], myId: userId, partnerId: pair.user1_id === userId ? pair.user2_id : pair.user1_id };
+    const { data: partnerProfile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', partnerId)
+        .maybeSingle();
+
+    return {
+        statuses: data || [],
+        myId: userId,
+        partnerId,
+        partnerAvatarUrl: (partnerProfile?.avatar_url as string | null) || null,
+    };
 }
 
 export async function getPartnerNameAction() {

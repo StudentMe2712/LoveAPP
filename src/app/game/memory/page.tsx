@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { createBrowserClient } from '@supabase/ssr';
 import confetti from 'canvas-confetti';
 import { hapticFeedback } from '@/lib/utils/haptics';
@@ -30,9 +31,13 @@ export default function MemoryPage() {
     const [totalPairs, setTotalPairs] = useState(0);
     const [isChecking, setIsChecking] = useState(false);
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            ),
+        [],
     );
 
     const initGame = useCallback(async () => {
@@ -74,7 +79,12 @@ export default function MemoryPage() {
         setLoading(false);
     }, [supabase]);
 
-    useEffect(() => { initGame(); }, []);
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => {
+            void initGame();
+        }, 0);
+        return () => window.clearTimeout(timeoutId);
+    }, [initGame]);
 
     const handleCardClick = useCallback((cardId: number) => {
         if (isChecking) return;
@@ -175,7 +185,18 @@ export default function MemoryPage() {
                             {(card.isFlipped || card.isMatched) && (
                                 isEmoji(card.imageUrl)
                                     ? <span className="text-3xl">{card.imageUrl}</span>
-                                    : <img src={card.imageUrl} alt="" className="w-full h-full object-cover rounded-xl" />
+                                    : (
+                                        <div className="relative h-full w-full">
+                                            <Image
+                                                src={card.imageUrl}
+                                                alt=""
+                                                fill
+                                                sizes="(max-width: 640px) 22vw, 96px"
+                                                unoptimized
+                                                className="rounded-xl object-cover"
+                                            />
+                                        </div>
+                                    )
                             )}
                             {!card.isFlipped && !card.isMatched && (
                                 <span className="text-2xl">💝</span>

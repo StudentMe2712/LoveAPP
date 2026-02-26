@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -8,6 +8,8 @@ import { ru } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { hapticFeedback } from "@/lib/utils/haptics";
 import BackButton from "@/components/BackButton";
+import Card from "@/components/ui/Card";
+import StateBlock from "@/components/ui/StateBlock";
 
 type Moment = {
     id: string;
@@ -244,9 +246,13 @@ export default function GalleryPage() {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [filter, setFilter] = useState<'all' | 'liked' | 'favorited'>('all');
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            ),
+        [],
     );
 
     useEffect(() => {
@@ -288,9 +294,9 @@ export default function GalleryPage() {
     const selectedMoment = selectedIndex !== null ? filteredMoments[selectedIndex] : null;
 
     return (
-        <main className="w-full min-h-[100dvh] bg-[#f2ebe3] dark:bg-[#1a1614] flex flex-col items-center p-4 pb-24">
+        <main className="app-safe-top app-safe-bottom w-full min-h-[100dvh] flex flex-col items-center p-4">
             {/* Header */}
-            <div className="w-full max-w-md pt-12 pb-4 flex items-center justify-between">
+            <div className="w-full max-w-md pb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <BackButton href="/" className="shrink-0" />
                     <h1 className="text-2xl font-extrabold tracking-tight text-[#4a403b] dark:text-[#d4c8c1]">Галерея</h1>
@@ -320,19 +326,14 @@ export default function GalleryPage() {
 
             {/* Content */}
             {loading ? (
-                <div className="w-full max-w-md flex justify-center py-20 opacity-50">
-                    <div className="animate-pulse text-4xl">📸</div>
-                </div>
+                <StateBlock icon="📸" title="Загружаем галерею..." className="w-full max-w-md py-20 opacity-60" />
             ) : filteredMoments.length === 0 ? (
-                <div className="w-full max-w-md flex flex-col items-center justify-center py-20 opacity-70">
-                    <span className="text-7xl mb-4">🖼️</span>
-                    <p className="font-bold text-lg text-[#4a403b] dark:text-[#d4c8c1]">
-                        {filter === 'all' ? 'Пока пусто' : 'Здесь пусто'}
-                    </p>
-                    <p className="text-sm opacity-60 mt-1 text-center">
-                        {filter === 'liked' ? 'Лайкай фото в галерее ❤️' : filter === 'favorited' ? 'Добавляй фото в избранное ⭐' : 'Загрузите первый момент на главной!'}
-                    </p>
-                </div>
+                <StateBlock
+                    icon="🖼️"
+                    title={filter === 'all' ? 'Пока пусто' : 'Здесь пусто'}
+                    description={filter === 'liked' ? 'Лайкай фото в галерее ❤️' : filter === 'favorited' ? 'Добавляй фото в избранное ⭐' : 'Загрузите первый момент на главной!'}
+                    className="w-full max-w-md py-20 opacity-80"
+                />
             ) : (
                 <div className="w-full max-w-md flex flex-col gap-8">
                     {grouped.map(([month, monthMoments]) => (
@@ -342,9 +343,10 @@ export default function GalleryPage() {
                                 {monthMoments.map(m => {
                                     const idxInFiltered = filteredMoments.findIndex(x => x.id === m.id);
                                     return (
-                                        <div
+                                        <Card
                                             key={m.id}
                                             onClick={() => setSelectedIndex(idxInFiltered)}
+                                            padded={false}
                                             className="relative cursor-pointer aspect-square rounded-[20px] overflow-hidden shadow-sm border border-[#e8dfd5] dark:border-[#3d332c] group"
                                         >
                                             <Image
@@ -374,7 +376,7 @@ export default function GalleryPage() {
                                                 isOwner={myUserId === m.sender_id}
                                                 onDelete={() => setMoments(prev => prev.filter(x => x.id !== m.id))}
                                             />
-                                        </div>
+                                        </Card>
                                     );
                                 })}
                             </div>

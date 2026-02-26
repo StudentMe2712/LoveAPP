@@ -7,6 +7,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import { hapticFeedback } from '@/lib/utils/haptics';
 import Link from 'next/link';
 import Image from 'next/image';
+import Button from '@/components/ui/Button';
+import StateBlock from '@/components/ui/StateBlock';
 
 type WishItem = {
     id: string;
@@ -220,12 +222,13 @@ export default function WishlistView() {
             </div>
 
             {!isAdding && (
-                <button
+                <Button
                     onClick={() => { hapticFeedback.light(); setIsAdding(true); }}
-                    className="w-full py-4 mb-6 bg-[#cca573] hover:bg-[#b98b53] text-white rounded-3xl font-bold text-lg shadow-sm active:scale-95 transition-all"
+                    fullWidth
+                    className="mb-6 rounded-3xl py-4 text-lg shadow-sm"
                 >
                     + Добавить хотелку
-                </button>
+                </Button>
             )}
 
             {isAdding && (
@@ -301,13 +304,12 @@ export default function WishlistView() {
                     if (activeTab === 'all') return true;
                     return i.category === activeTab;
                 }).length === 0 && !isAdding && (
-                        <div className="w-full flex flex-col items-center justify-center py-12 text-center opacity-70">
-                            <span className="text-7xl drop-shadow-sm mb-4">🧸</span>
-                            <p className="font-bold text-lg text-[#4a403b] dark:text-[#d4c8c1]">Пустовато...</p>
-                            <p className="text-sm text-[#4a403b]/80 dark:text-[#d4c8c1]/80 mt-1">
-                                {activeTab === 'gifted' ? 'Пока ничего не подарено!' : 'Добавьте сюда свои заветные желания! ✨'}
-                            </p>
-                        </div>
+                        <StateBlock
+                            icon="🧸"
+                            title="Пустовато..."
+                            description={activeTab === 'gifted' ? 'Пока ничего не подарено!' : 'Добавьте сюда свои заветные желания! ✨'}
+                            className="py-12 opacity-80"
+                        />
                     )}
 
                 {items.filter(i => {

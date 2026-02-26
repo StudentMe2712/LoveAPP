@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "public/sw.js",
+    "disable.js",
+    "link_users.js",
   ]),
 ]);
 

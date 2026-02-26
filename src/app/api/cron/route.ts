@@ -74,8 +74,12 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ success: true, messagesSent });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+        const message =
+            typeof err === 'object' && err !== null && 'message' in err
+                ? String((err as { message?: unknown }).message ?? 'Unknown error')
+                : 'Unknown error';
         console.error('CRON Error:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

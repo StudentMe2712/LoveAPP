@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { createBrowserClient } from '@supabase/ssr';
 import { getUserStatusesAction, updateUserStatusAction } from '@/app/actions/status';
 import { hapticFeedback } from '@/lib/utils/haptics';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 
 interface StatusRow {
@@ -35,44 +34,53 @@ const MOODS = [
     { emoji: '☕', text: 'Пью кофе' },
 ];
 
-export default function UserStatusWidget({ displayName, avatarUrl, partnerName }: { displayName: string, avatarUrl: string | null, partnerName?: string }) {
+export default function UserStatusWidget({ displayName, partnerName }: { displayName: string, partnerName?: string }) {
     const [statuses, setStatuses] = useState<StatusRow[]>([]);
     const [myId, setMyId] = useState<string | null>(null);
     const [partnerId, setPartnerId] = useState<string | null>(null);
+    const [partnerAvatarUrl, setPartnerAvatarUrl] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            ),
+        [],
     );
 
-    const fetchStatuses = async () => {
+    const fetchStatuses = useCallback(async () => {
         const res = await getUserStatusesAction();
         if (res.statuses) {
             setStatuses(res.statuses);
             setMyId(res.myId || null);
             setPartnerId(res.partnerId || null);
+            setPartnerAvatarUrl(res.partnerAvatarUrl || null);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchStatuses();
+        const initialFetchTimeout = window.setTimeout(() => {
+            void fetchStatuses();
+        }, 0);
 
         const channel = supabase.channel('public:user_statuses')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'user_statuses' },
                 () => {
-                    fetchStatuses();
+                    void fetchStatuses();
                 }
             )
             .subscribe();
 
         return () => {
+            window.clearTimeout(initialFetchTimeout);
             supabase.removeChannel(channel);
         };
-    }, [supabase]);
+    }, [fetchStatuses, supabase]);
 
     const handleSelectStatus = async (emoji: string, text: string) => {
         if (updating) return;
@@ -139,8 +147,15 @@ export default function UserStatusWidget({ displayName, avatarUrl, partnerName }
                             )}
                         </div>
                     </div>
-                    {avatarUrl && (
-                        <img src={avatarUrl} alt="Avatar" className="w-14 h-14 rounded-full object-cover border-2 border-[#e8dfd5] dark:border-[#3d332c] shadow-sm shrink-0" />
+                    {partnerAvatarUrl && (
+                        <Image
+                            src={partnerAvatarUrl}
+                            alt={`Аватар ${resolvedPartnerName}`}
+                            width={56}
+                            height={56}
+                            unoptimized
+                            className="h-14 w-14 shrink-0 rounded-full border-2 border-[#e8dfd5] object-cover shadow-sm dark:border-[#3d332c]"
+                        />
                     )}
                 </div>
             </div>

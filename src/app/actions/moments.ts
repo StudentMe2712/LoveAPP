@@ -63,7 +63,7 @@ export async function createMomentAction(formData: FormData) {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        let userId = user?.id || "00000000-0000-0000-0000-000000000000";
+        const userId = user?.id || "00000000-0000-0000-0000-000000000000";
 
         const photo = formData.get('photo') as File | null;
         const caption = formData.get('caption') as string | null;

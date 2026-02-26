@@ -8,7 +8,7 @@ export default function BottomNav() {
     const pathname = usePathname();
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-2">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-[calc(var(--space-2)+env(safe-area-inset-bottom,0px))]">
             <div
                 className="w-full max-w-sm backdrop-blur-xl rounded-t-[36px] border flex justify-between items-center px-4 py-3 shadow-[0_-8px_20px_-10px_rgba(0,0,0,0.05)]"
                 style={{ backgroundColor: "var(--bg)", borderColor: "var(--border)" }}

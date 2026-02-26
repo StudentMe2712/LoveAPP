@@ -3,12 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { routeSignalNotification, SignalType } from "@/lib/notifications/router";
 import { generateComfortingMessage } from "@/lib/ai";
+import { checkSignalRateLimit } from "@/lib/redis/rateLimit";
 import { revalidatePath } from "next/cache";
-
-// Simple in-memory rate limiting map for the MVP
-// Key: user_id, Value: timestamp of last signal
-const rateLimitMap = new Map<string, number>();
-const RATE_LIMIT_MS = 60 * 1000; // 1 minute
 
 export async function sendSignalAction(signalType: string) {
     try {
@@ -20,11 +16,9 @@ export async function sendSignalAction(signalType: string) {
         if (!userId) { userId = "00000000-0000-0000-0000-000000000000"; }
 
         // 1. Anti-spam check
-        const lastSignalTime = rateLimitMap.get(userId);
-        const now = Date.now();
-        if (lastSignalTime && (now - lastSignalTime) < RATE_LIMIT_MS) {
-            const minutesLeft = Math.ceil((RATE_LIMIT_MS - (now - lastSignalTime)) / 1000);
-            return { error: `Подождите ${minutesLeft} сек. перед следующим сигналом` };
+        const rateLimit = await checkSignalRateLimit(userId);
+        if (!rateLimit.allowed) {
+            return { error: `Подождите ${rateLimit.waitSec} сек. перед следующим сигналом` };
         }
 
         // 2. Fetch partner ID for notification (from pair table)
@@ -53,8 +47,6 @@ export async function sendSignalAction(signalType: string) {
                 return { error: "Не удалось сохранить сигнал" };
             }
         }
-
-        rateLimitMap.set(userId, now);
 
         // 4. Send notification to partner
         if (pairData) {

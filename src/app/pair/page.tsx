@@ -53,11 +53,11 @@ export default function PairPage() {
     };
 
     if (loading) {
-        return <div className="w-full h-[100dvh] flex items-center justify-center bg-[#f2ebe3] dark:bg-[#1a1614] absolute inset-0 z-[100]"><div className="animate-pulse text-4xl">❤️</div></div>;
+        return <div className="w-full h-[100dvh] flex items-center justify-center absolute inset-0 z-[100]"><div className="animate-pulse text-4xl">❤️</div></div>;
     }
 
     return (
-        <main className="w-full min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#f2ebe3] dark:bg-[#1a1614] absolute inset-0 z-[100]">
+        <main className="w-full min-h-[100dvh] flex flex-col items-center justify-center p-6 absolute inset-0 z-[100]">
             <div className="w-full max-w-sm bg-white dark:bg-[#2d2621] rounded-[32px] p-8 shadow-sm border-[2px] border-[#e8dfd5] dark:border-[#3d332c] flex flex-col items-center text-center">
                 <span className="text-5xl drop-shadow-sm mb-4">🔑</span>
                 <h1 className="text-2xl font-extrabold tracking-tight mb-2">Создать Пару</h1>

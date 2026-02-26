@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2560" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14385a"/>
+      <stop offset="45%" stop-color="#1f7aa8"/>
+      <stop offset="100%" stop-color="#0f2235"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g)"/>
+  <path d="M0 1640 C 220 1700 390 1600 620 1680 C 820 1750 1080 1680 1440 1760 L1440 2560 L0 2560Z" fill="#0a1b2c" opacity="0.6"/>
+  <ellipse cx="760" cy="1240" rx="760" ry="280" fill="#7fd8ff" opacity="0.2"/>
+</svg>

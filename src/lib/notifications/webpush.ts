@@ -53,13 +53,22 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
         }));
 
         return true;
-    } catch (err: any) {
-        if (err?.statusCode === 410) {
+    } catch (err: unknown) {
+        const statusCode =
+            typeof err === 'object' && err !== null && 'statusCode' in err
+                ? (err as { statusCode?: number }).statusCode
+                : undefined;
+        const message =
+            typeof err === 'object' && err !== null && 'message' in err
+                ? String((err as { message?: unknown }).message ?? '')
+                : String(err ?? '');
+
+        if (statusCode === 410) {
             // Subscription expired - remove it
             const supabase = await createClient();
             await supabase.from('push_subscriptions').delete().eq('user_id', userId);
         }
-        console.error('sendPushToUser error:', err?.statusCode, err?.message);
+        console.error('sendPushToUser error:', statusCode, message);
         return false;
     }
 }

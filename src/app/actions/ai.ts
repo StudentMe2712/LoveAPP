@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { generateHomeInsight } from "@/lib/ai";
 
 const quotes = [
     "Любовь — это когда хочешь переживать с кем-то все четыре времени года.",
@@ -49,13 +48,13 @@ export async function confirmAIProposalAction(type: string, payload: string) {
         let userId = user?.id;
         if (!userId) { userId = "00000000-0000-0000-0000-000000000000"; }
 
-        const { data: pairData, error: pairError } = await supabase
+        const { data: pairData } = await supabase
             .from("pair")
             .select("user1_id, user2_id")
             .limit(1)
             .single();
 
-        let partnerTelegramId = process.env.TELEGRAM_GROUP_CHAT_ID;
+        const partnerTelegramId = process.env.TELEGRAM_GROUP_CHAT_ID;
 
         if (!partnerTelegramId && pairData) {
             // We might map partnerId to a telegram ID in the future

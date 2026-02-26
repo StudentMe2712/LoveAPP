@@ -5,22 +5,41 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host "== Nash Domik QA Gate ==" -ForegroundColor Cyan
 
+function Run-Checked {
+  param (
+    [Parameter(Mandatory = $true)]
+    [string]$Exe,
+    [string[]]$CliArgs = @()
+  )
+
+  & $Exe @CliArgs
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "GATE FAIL: $Exe $($CliArgs -join ' ') exited with code $LASTEXITCODE" -ForegroundColor Red
+    exit $LASTEXITCODE
+  }
+}
+
 # 1) Basic repo structure checks
 Write-Host "[1/3] Checking docs + tasks..." -ForegroundColor Cyan
-python ./scripts/checklist_gate.py
-python ./scripts/task_gate.py
+Run-Checked "python" @("./scripts/checklist_gate.py")
+Run-Checked "python" @("./scripts/task_gate.py")
 
 # 2) (Optional) Node gates once code exists
 if (Test-Path "./package.json") {
   Write-Host "[2/3] Node gates..." -ForegroundColor Cyan
 
-  if (Get-Command npm -ErrorAction SilentlyContinue) {
-    npm --version | Out-Null
+  $npmCmd = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
+  if ($npmCmd) {
+    & $npmCmd --version | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "GATE FAIL: npm --version exited with code $LASTEXITCODE" -ForegroundColor Red
+      exit $LASTEXITCODE
+    }
 
     if (Test-Path "./node_modules") {
-      npm run -s lint
-      npm run -s test
-      npm run -s build
+      Run-Checked $npmCmd @("run", "-s", "lint")
+      Run-Checked $npmCmd @("run", "-s", "test")
+      Run-Checked $npmCmd @("run", "-s", "build")
     } else {
       Write-Host "node_modules not found. Skipping lint/test/build (run npm install)." -ForegroundColor Yellow
     }

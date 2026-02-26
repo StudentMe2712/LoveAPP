@@ -20,8 +20,8 @@ export default function SwipeableLayout({ children }: { children: React.ReactNod
 
     const shouldHandleSwipe = (eventData: SwipeEventData) => {
         if (!isSwipeEnabled) return false;
-        if (eventData.absX < 64) return false;
-        return eventData.absX > eventData.absY * 1.35;
+        if (eventData.absX < 80) return false;
+        return eventData.absX > eventData.absY * 1.45;
     };
 
     const handlers = useSwipeable({
@@ -37,13 +37,13 @@ export default function SwipeableLayout({ children }: { children: React.ReactNod
                 router.push(ROUTES[currentIndex - 1]);
             }
         },
-        delta: 28,
+        delta: 44,
         preventScrollOnSwipe: false,
         trackMouse: false // Only touch events
     });
 
     return (
-        <div {...(isSwipeEnabled ? handlers : {})} className="w-full min-h-screen">
+        <div {...(isSwipeEnabled ? handlers : {})} className="w-full min-h-[100dvh]">
             {children}
         </div>
     );

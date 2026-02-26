@@ -48,23 +48,23 @@ export default function TimeTogetherWidget() {
         );
     }
 
-    let years = differenceInYears(now, startedAt);
-    let dateAfterYears = new Date(startedAt);
+    const years = differenceInYears(now, startedAt);
+    const dateAfterYears = new Date(startedAt);
     dateAfterYears.setFullYear(dateAfterYears.getFullYear() + years);
 
-    let days = differenceInDays(now, dateAfterYears);
-    let dateAfterDays = new Date(dateAfterYears);
+    const days = differenceInDays(now, dateAfterYears);
+    const dateAfterDays = new Date(dateAfterYears);
     dateAfterDays.setDate(dateAfterDays.getDate() + days);
 
-    let hours = differenceInHours(now, dateAfterDays);
-    let dateAfterHours = new Date(dateAfterDays);
+    const hours = differenceInHours(now, dateAfterDays);
+    const dateAfterHours = new Date(dateAfterDays);
     dateAfterHours.setHours(dateAfterHours.getHours() + hours);
 
-    let minutes = differenceInMinutes(now, dateAfterHours);
-    let dateAfterMinutes = new Date(dateAfterHours);
+    const minutes = differenceInMinutes(now, dateAfterHours);
+    const dateAfterMinutes = new Date(dateAfterHours);
     dateAfterMinutes.setMinutes(dateAfterMinutes.getMinutes() + minutes);
 
-    let seconds = differenceInSeconds(now, dateAfterMinutes);
+    const seconds = differenceInSeconds(now, dateAfterMinutes);
 
     return (
         <div className="w-full bg-[#fdfbf9] dark:bg-[#2c2623] rounded-3xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-[#e8dfd5] dark:border-[#3d332c] mb-6 flex flex-col items-center justify-center relative overflow-hidden">

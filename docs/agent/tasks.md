@@ -66,11 +66,11 @@ Legend: `TODO | DOING | DONE | BLOCKED`
 - [DONE] T0505 Mini-games "Поиграем?" (Tic-Tac-Toe & Drawing Board via Realtime)
 
 ## Phase 6 — UX Polish & Notifications
-- [ ] T0601 Fix "Today's moment" button text to show "Загрузить" instead of "Послушать это"
-- [ ] T0602 Add full-screen image view modal in the Gallery
-- [ ] T0603 Wishlist: show full details of items on click (expand/modal)
-- [ ] T0604 Rename "Память" tab to "Вишлист" in BottomNav
-- [ ] T0605 Deletion feature: Add UI to delete moments, wishlist items, and plans
-- [ ] T0606 Plans UX: Improve slot selection design to make it intuitive
-- [ ] T0607 Notifications Bell: Add a dropdown/modal to show recent signals/notifications
-- [ ] T0608 Notification CRON: Implement periodic Telegram reminders for upcoming plans (24h, 12h, 6h, 3h, 1h, 30m) and inactivity reminders (1h+)
+- [TODO] T0601 Fix "Today's moment" button text to show "Загрузить" instead of "Послушать это"
+- [TODO] T0602 Add full-screen image view modal in the Gallery
+- [TODO] T0603 Wishlist: show full details of items on click (expand/modal)
+- [TODO] T0604 Rename "Память" tab to "Вишлист" in BottomNav
+- [TODO] T0605 Deletion feature: Add UI to delete moments, wishlist items, and plans
+- [TODO] T0606 Plans UX: Improve slot selection design to make it intuitive
+- [TODO] T0607 Notifications Bell: Add a dropdown/modal to show recent signals/notifications
+- [TODO] T0608 Notification CRON: Implement periodic Telegram reminders for upcoming plans (24h, 12h, 6h, 3h, 1h, 30m) and inactivity reminders (1h+)

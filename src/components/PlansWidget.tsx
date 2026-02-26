@@ -2,8 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 
+type PlanRow = {
+    id: string;
+    title: string;
+    chosen_slot: string | null;
+};
+
 export default function PlansWidget() {
-    const [plans, setPlans] = useState<any[]>([]);
+    const [plans, setPlans] = useState<PlanRow[]>([]);
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,7 +23,15 @@ export default function PlansWidget() {
                 .eq('status', 'locked')
                 .order('created_at', { ascending: false })
                 .limit(2);
-            if (data) setPlans(data);
+            if (data) {
+                setPlans(
+                    data.map((plan) => ({
+                        id: String(plan.id),
+                        title: String(plan.title ?? ''),
+                        chosen_slot: plan.chosen_slot ? String(plan.chosen_slot) : null,
+                    })),
+                );
+            }
         };
         fetchPlans();
     }, [supabase]);

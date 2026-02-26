@@ -11,10 +11,12 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 const isTunnelHost = self.location.hostname.endsWith("trycloudflare.com");
+const isLocalHost = self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1";
+const isUnstableHost = isTunnelHost || isLocalHost;
 
 const serwist = new Serwist({
-    // Tunnel host changes very often; disable precache there to avoid stale hash 404s.
-    precacheEntries: isTunnelHost ? [] : (self.__SW_MANIFEST || []),
+    // Tunnel/localhost builds change often; disable precache there to avoid stale hash 404s.
+    precacheEntries: isUnstableHost ? [] : (self.__SW_MANIFEST || []),
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
@@ -23,7 +25,7 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
-if (isTunnelHost) {
+if (isUnstableHost) {
     self.addEventListener("activate", (event) => {
         event.waitUntil((async () => {
             const cacheNames = await caches.keys();

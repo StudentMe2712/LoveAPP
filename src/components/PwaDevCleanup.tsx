@@ -12,10 +12,12 @@ declare global {
 
 export default function PwaDevCleanup() {
     useEffect(() => {
-        const isTunnelHost = typeof window !== "undefined" && window.location.hostname.endsWith("trycloudflare.com");
+        const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+        const isTunnelHost = hostname.endsWith("trycloudflare.com");
+        const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
         const isProduction = process.env.NODE_ENV === "production";
-        const shouldDisableSw = !isProduction || isTunnelHost;
-        const cleanupKey = "__sw_cleanup_v3_done__";
+        const shouldDisableSw = !isProduction || isTunnelHost || isLocalHost;
+        const cleanupKey = "__sw_cleanup_v4_done__";
 
         const cleanup = async (): Promise<boolean> => {
             let touched = false;

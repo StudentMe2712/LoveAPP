@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import SwipeableLayout from "@/components/SwipeableLayout";
 import BottomNav from "@/components/BottomNav";
 import PwaDevCleanup from "@/components/PwaDevCleanup";
+import SectionBackgroundLayer from "@/components/SectionBackgroundLayer";
 import "./globals.css";
 
 const nunito = Nunito({ subsets: ["cyrillic", "latin"], weight: ["400", "700", "800"] });
@@ -27,16 +28,19 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body
-        className={`${nunito.className} antialiased transition-colors`}
+        className={`${nunito.className} antialiased transition-colors isolate`}
         style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
       >
         <ThemeProvider>
           <PwaDevCleanup />
-          <SwipeableLayout>
-            {children}
-            <BottomNav />
-          </SwipeableLayout>
-          <Toaster position="top-center" />
+          <SectionBackgroundLayer />
+          <div className="relative z-10">
+            <SwipeableLayout>
+              {children}
+              <BottomNav />
+            </SwipeableLayout>
+            <Toaster position="top-center" />
+          </div>
         </ThemeProvider>
       </body>
     </html>

@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import toast from 'react-hot-toast';
 import { hapticFeedback } from '@/lib/utils/haptics';
@@ -8,6 +8,7 @@ import { generateQuizQuestionsAction } from '@/app/actions/quiz';
 import confetti from 'canvas-confetti';
 import { useResolvedPartnerName } from '@/lib/hooks/useResolvedPartnerName';
 import BackButton from '@/components/BackButton';
+import StateBlock from '@/components/ui/StateBlock';
 
 type Question = {
     id: string;
@@ -101,9 +102,13 @@ export default function QuizPage() {
     const [aiSuggestions, setAiSuggestions] = useState<{ question: string; hint?: string }[]>([]);
     const resolvedPartnerName = useResolvedPartnerName();
 
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            ),
+        [],
     );
 
     const fetchData = useCallback(async (uid: string, pid: string, partnerId: string) => {
@@ -130,7 +135,10 @@ export default function QuizPage() {
     useEffect(() => {
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            if (!user) {
+                setLoading(false);
+                return;
+            }
             setUserId(user.id);
 
             const { data: pair } = await supabase
@@ -146,8 +154,8 @@ export default function QuizPage() {
             }
             setLoading(false);
         };
-        init();
-    }, []);
+        void init();
+    }, [fetchData, supabase]);
 
     const handleAddQuestion = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -238,15 +246,20 @@ export default function QuizPage() {
 
     const unanswered = partnerQuestions.filter(q => !myAnswers[q.id]);
     const correctCount = partnerQuestions.filter(q => myAnswers[q.id]?.is_correct === true).length;
+    const tabs: Array<{ id: 'write' | 'answer' | 'results'; label: string }> = [
+        { id: 'write', label: '✍️ Мои вопросы' },
+        { id: 'answer', label: `💬 Ответить${unanswered.length > 0 ? ` (${unanswered.length})` : ''}` },
+        { id: 'results', label: '📊 Итоги' },
+    ];
 
     if (loading) return (
-        <main className="w-full min-h-[100dvh] flex items-center justify-center">
-            <div className="text-4xl animate-bounce">💭</div>
+        <main className="app-safe-top app-safe-bottom w-full min-h-[100dvh] px-6">
+            <StateBlock icon="💭" title="Загружаем квиз..." className="mt-12" />
         </main>
     );
 
     return (
-        <main className="w-full min-h-[100dvh] flex flex-col items-center px-6 pt-12 pb-32">
+        <main className="app-safe-top app-safe-bottom w-full min-h-[100dvh] flex flex-col items-center px-6">
             <header className="w-full flex justify-between items-center mb-6">
                 <BackButton href="/game" />
                 <h1 className="text-xl font-extrabold tracking-tight">Как ты меня знаешь? 💭</h1>
@@ -255,14 +268,10 @@ export default function QuizPage() {
 
             {/* Tabs */}
             <div className="flex bg-[#e8dfd5] dark:bg-[#3d332c] p-1.5 rounded-[20px] mb-6 w-full gap-1 shadow-inner">
-                {[
-                    { id: 'write', label: `✍️ Мои вопросы` },
-                    { id: 'answer', label: `💬 Ответить${unanswered.length > 0 ? ` (${unanswered.length})` : ''}` },
-                    { id: 'results', label: '📊 Итоги' },
-                ].map(t => (
+                {tabs.map(t => (
                     <button
                         key={t.id}
-                        onClick={() => { hapticFeedback.light(); setTab(t.id as any); }}
+                        onClick={() => { hapticFeedback.light(); setTab(t.id); }}
                         className={`flex-1 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 ${tab === t.id ? 'bg-white dark:bg-[#2d2621] shadow-sm text-[#cca573]' : 'opacity-60 hover:opacity-100'}`}
                     >
                         {t.label}
@@ -455,7 +464,7 @@ export default function QuizPage() {
                             <span className="text-5xl">{correctCount === partnerQuestions.length ? '🏆' : correctCount > partnerQuestions.length / 2 ? '🥈' : '📚'}</span>
                             <p className="font-extrabold text-2xl text-[#4a403b] dark:text-[#d4c8c1]">{correctCount}/{partnerQuestions.length}</p>
                             <p className="text-sm opacity-60 font-bold">
-                                {correctCount === partnerQuestions.length ? `Идеально знаешь ${resolvedPartnerName}!` : `ты знаешь ${resolvedPartnerName} на ${Math.round(correctCount / partnerQuestions.length * 100)}%`}
+                                {correctCount === partnerQuestions.length ? `Идеально знаешь ${resolvedPartnerName}!` : `Ты знаешь ${resolvedPartnerName} на ${Math.round(correctCount / partnerQuestions.length * 100)}%`}
                             </p>
                         </div>
                     )}

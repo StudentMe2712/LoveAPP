@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/web-push": "^3.6.4",
+    "@upstash/redis": "^1.36.2",
     "buffer": "^6.0.3",
     "canvas-confetti": "^1.9.4",
     "date-fns": "^4.1.0",

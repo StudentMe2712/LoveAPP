@@ -66,3 +66,36 @@
 - [Journey] Replaced emoji heart glyph rendering with inline SVG heart to fix missing heart on older iOS devices (including iPhone 7+ class devices).
 - [Journey] Moved the heart anchor higher again on desktop/mobile breakpoints to match the requested road position.
 - [Quiz AI] Fixed client crash when AI returns object-shaped question fields (e.g. localized keys like `{вопрос: ...}`): server/client now normalize AI suggestions to safe strings before rendering.
+
+## 0.1.7 — 2026-02-25
+- [Infra] Hardened `qa_gate.ps1` to strict fail-fast with reliable exit-code handling for docs/lint/test/build.
+- [Infra] Migrated auth edge entry from deprecated `middleware.ts` to `proxy.ts` with the same matcher behavior.
+- [Quality] Reduced frontend lint issues to `0 errors` and `7 warnings`; fixed hook cascade issues in `ThemeProvider`, `Journey`, `Memory`, and `UserStatusWidget`.
+- [UI] Added shared GUI primitives (`Card`, `Button`, `Field`, `StateBlock`) and introduced global UI tokens for spacing/radius/shadows/text scale.
+- [UI] Unified `BackButton` style across internal screens with consistent touch-target sizing.
+- [Journey] Improved mobile reliability: heart anchor now uses bottom+safe-area positioning, reducing disappearance on compact iPhone viewports.
+- [Mobile] Added safe-area helpers and applied them on key routes (`/wishlist`, `/gallery`, `/game/quiz`, `/settings`), plus bottom-nav safe-area padding.
+- [UX] Tightened swipe gesture filtering in `SwipeableLayout` to reduce accidental diagonal route switches.
+
+## 0.1.8 - 2026-02-25
+- [Encoding] Fixed remaining UTF-8/mojibake UI texts on `/gallery` (title, filters, actions, placeholders, toasts, favorite icons).
+- [Encoding] Fixed remaining UTF-8/mojibake UI texts on `/game/quiz` (tabs, headings, hints, AI labels, result states, and status copy).
+- [Stability] Verified both screens after text rewrites: `npm run -s lint` (0 errors, warnings only) and `npm run -s build` successful.
+
+## 0.1.9 - 2026-02-25
+- [Avatar] Fixed partner avatar rendering in `UserStatusWidget`: right-side avatar now loads from `profiles.avatar_url` by `partnerId` instead of reusing the current user's avatar.
+- [Status API] Extended `getUserStatusesAction` response with `partnerAvatarUrl` for reliable partner UI sync after avatar changes.
+
+## 0.1.10 - 2026-02-25
+- [Infra] Integrated optional Upstash Redis client with feature flags (`REDIS_ENABLED`, `REDIS_RATE_LIMIT_SIGNALS`, `REDIS_CACHE_AI`) and graceful fallback behavior.
+- [Signals] Replaced process-local anti-spam gate with Redis-backed 60s rate limit (`SET NX EX` + `TTL`), while preserving fallback flow when Redis is unavailable.
+- [AI] Added Redis cache for quiz question generation (TTL 30m) and spicy generation endpoint (TTL 15m) with structured `redis=hit|miss|fallback` logs.
+
+## 0.1.11 - 2026-02-26
+- [Backgrounds] Added per-section background system for all key routes except `/journey` (which remains fixed by design).
+- [Backgrounds] Implemented route-to-section mapping, local storage contract (`nd.section_backgrounds.v1`), and uploaded image blob storage in IndexedDB (`nash_domik_assets/section_backgrounds`).
+- [Settings] Added a new "Фоны по разделам" block with section selector, 8 presets, custom upload, dim/blur controls, and reset action.
+- [UI] Added global background rendering layer behind GUI with per-section isolation and no pointer interaction conflicts.
+- [UI] Removed hardcoded root background fills on `plans`, `gallery`, `login`, `pair`, and spicy root containers so section backgrounds can be visible.
+- [PWA] Hardened stale-cache protection for local production runs: Service Worker cleanup/disable now applies on `localhost` and `127.0.0.1` (in addition to tunnel), preventing recurring `bad-precaching-response` and chunk 404 loops after rebuilds.
+

@@ -1,16 +1,14 @@
-"use client";
-import React, { createContext, useContext, useEffect, useState } from 'react';
+﻿"use client";
 
-/* ─── Palette definitions ───────────────────────────────────────────── */
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+
 export type PaletteName = 'warm' | 'winter' | 'forest' | 'minimal';
 
 export type Palette = {
     name: PaletteName;
     label: string;
     emoji: string;
-    /** CSS custom properties injected on <html> */
     vars: Record<string, string>;
-    /** same vars for dark mode */
     darkVars: Record<string, string>;
 };
 
@@ -135,7 +133,6 @@ function isPaletteName(value: string | null): value is PaletteName {
     return PALETTES.some((palette) => palette.name === value);
 }
 
-/* ─── Context ───────────────────────────────────────────────────────── */
 type ThemeCtx = {
     theme: 'light' | 'dark';
     toggleTheme: () => void;
@@ -146,63 +143,63 @@ type ThemeCtx = {
 
 const ThemeContext = createContext<ThemeCtx>({
     theme: 'light',
-    toggleTheme: () => { },
+    toggleTheme: () => {},
     palette: 'warm',
-    setPalette: () => { },
+    setPalette: () => {},
     currentPalette: PALETTES[0],
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
-/* ─── Provider ──────────────────────────────────────────────────────── */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+    // Keep initial server/client render deterministic to avoid hydration mismatches.
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [palette, setPaletteState] = useState<PaletteName>('warm');
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-        const savedPaletteRaw = localStorage.getItem('palette');
-        const savedPalette = isPaletteName(savedPaletteRaw) ? savedPaletteRaw : 'warm';
-
-        let isDark = false;
-        if (savedTheme === 'dark') {
-            isDark = true;
-        } else if (!savedTheme && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-            isDark = true;
-        }
-
-        setTheme(isDark ? 'dark' : 'light');
-        document.documentElement.classList.toggle('dark', isDark);
-        setPaletteState(savedPalette);
-        const pal = PALETTES.find(p => p.name === savedPalette) || PALETTES[0];
-        applyPalette(pal, isDark);
-    }, []);
+    const restoredRef = useRef(false);
 
     const toggleTheme = () => {
-        setTheme((prevTheme) => {
-            const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', nextTheme);
-            return nextTheme;
-        });
+        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
     };
 
     const setPalette = (name: PaletteName) => {
         setPaletteState(name);
-        localStorage.setItem('palette', name);
     };
 
-    const currentPalette = PALETTES.find(p => p.name === palette) || PALETTES[0];
+    const currentPalette = PALETTES.find((p) => p.name === palette) || PALETTES[0];
 
     useEffect(() => {
-        if (!mounted) return;
+        if (typeof window === 'undefined' || restoredRef.current) return;
+        restoredRef.current = true;
+
+        const savedTheme = localStorage.getItem('theme');
+        const savedPaletteRaw = localStorage.getItem('palette');
+        const savedPalette = isPaletteName(savedPaletteRaw) ? savedPaletteRaw : 'warm';
+
+        const resolvedTheme: 'light' | 'dark' =
+            savedTheme === 'light' || savedTheme === 'dark'
+                ? savedTheme
+                : window.matchMedia?.('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light';
+
+        queueMicrotask(() => {
+            setTheme((prev) => (prev === resolvedTheme ? prev : resolvedTheme));
+            setPaletteState((prev) => (prev === savedPalette ? prev : savedPalette));
+        });
+    }, []);
+
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+
         const isDark = theme === 'dark';
         document.documentElement.classList.toggle('dark', isDark);
         applyPalette(currentPalette, isDark);
-    }, [currentPalette, mounted, theme]);
 
-    if (!mounted) return <>{children}</>;
+        if (typeof window !== 'undefined' && restoredRef.current) {
+            localStorage.setItem('theme', theme);
+            localStorage.setItem('palette', palette);
+        }
+    }, [currentPalette, palette, theme]);
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme, palette, setPalette, currentPalette }}>
