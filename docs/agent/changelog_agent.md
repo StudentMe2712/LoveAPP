@@ -144,3 +144,6 @@
 - [PWA] Switched App Router metadata to explicit PWA/iOS icon configuration and linked manifest via `manifest: "/manifest.json"` in `src/app/layout.tsx`.
 - [PWA] Added static `public/manifest.json` with updated app identity/colors/icons and removed `src/app/manifest.ts` to avoid conflicting manifest routes.
 - [Docs] Added checklist items for manifest/icon verification and iOS Home Screen icon cache refresh steps.
+
+## 0.1.18 - 2026-03-02
+- [PWA] Re-generated app icons from the updated `public/icons/content.png` using transparent-boundary crop + centered composition on opaque background to remove dark outer halo/background artifacts on Home Screen.
