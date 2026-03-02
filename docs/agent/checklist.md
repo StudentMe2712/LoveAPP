@@ -13,7 +13,9 @@
 ## App quality (once code exists)
 - [x] Typecheck/lint passes (via npm run build) Evidence: npm run build completed
 - [x] Basic tests pass (dummy test added) Evidence: npm run test exits with 0
-- [x] PWA manifest present Evidence: app/manifest.ts
+- [x] PWA manifest present Evidence: public/manifest.json
+- [x] PWA icons are production assets in `public/icons/` Evidence: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`
+- [x] Manifest points to `public/icons` assets Evidence: `public/manifest.json`
 - [ ] Realtime flows tested
 
 ## Notifications
@@ -24,3 +26,9 @@
 ## Release
 - [ ] `scripts/qa_gate.ps1` green
 - [ ] Version bump recorded in changelog
+
+## iOS cache cleanup (icon refresh)
+1. On iPhone, long-press the existing Home Screen app icon and choose "Delete App" (removes stale icon cache).
+2. In Safari, open the app URL and refresh once.
+3. Use Share -> Add to Home Screen again.
+4. If old icon still appears, clear Safari website data for this domain and repeat step 3.

@@ -13,11 +13,25 @@ const nunito = Nunito({ subsets: ["cyrillic", "latin"], weight: ["400", "700", "
 
 export const metadata: Metadata = {
   title: "Наш домик",
-  description: "Компактный домик для двоих",
+  description: "Уютный домик для двоих",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/icons/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Наш домик",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5eedc",
+  themeColor: "#ff6b81",
 };
 
 export default function RootLayout({

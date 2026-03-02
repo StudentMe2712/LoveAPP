@@ -138,3 +138,9 @@
 - [Infra] Added `SHARED_UPLOADS_DIR` env override for shared media storage path (Linux/Ubuntu-friendly; fallback remains Windows UNC path).
 - [Wishlist] Switched wishlist photo upload path resolution to shared storage helper so Linux mount paths and chat media use a unified directory source.
 - [Docs] Added README section with Ubuntu example (`/mnt/Y`) for shared uploads configuration.
+
+## 0.1.17 - 2026-03-02
+- [PWA] Replaced Home Screen icon assets with production PNGs derived from `public/icons/content.png`: `public/icons/icon-192.png`, `public/icons/icon-512.png`, and `public/icons/apple-touch-icon.png`.
+- [PWA] Switched App Router metadata to explicit PWA/iOS icon configuration and linked manifest via `manifest: "/manifest.json"` in `src/app/layout.tsx`.
+- [PWA] Added static `public/manifest.json` with updated app identity/colors/icons and removed `src/app/manifest.ts` to avoid conflicting manifest routes.
+- [Docs] Added checklist items for manifest/icon verification and iOS Home Screen icon cache refresh steps.

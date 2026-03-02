@@ -1,0 +1,20 @@
+{
+  "name": "\u041d\u0430\u0448 \u0434\u043e\u043c\u0438\u043a",
+  "short_name": "\u0414\u043e\u043c\u0438\u043a",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b0f",
+  "theme_color": "#ff6b81",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
