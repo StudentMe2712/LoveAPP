@@ -9,6 +9,7 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+    devIndicators: false,
     experimental: {
         serverActions: {
             allowedOrigins: ['localhost:3001', '*.trycloudflare.com'],

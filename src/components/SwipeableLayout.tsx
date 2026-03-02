@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SwipeEventData, useSwipeable } from 'react-swipeable';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -18,6 +18,12 @@ export default function SwipeableLayout({ children }: { children: React.ReactNod
     const pathname = usePathname();
     const currentIndex = ROUTES.indexOf(pathname);
     const isSwipeEnabled = currentIndex !== -1;
+
+    useEffect(() => {
+        ROUTES.forEach((route) => {
+            router.prefetch(route);
+        });
+    }, [router]);
 
     const shouldHandleSwipe = (eventData: SwipeEventData) => {
         if (!isSwipeEnabled) return false;

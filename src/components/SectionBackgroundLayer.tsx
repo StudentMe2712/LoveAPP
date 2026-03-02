@@ -9,7 +9,15 @@ import {
   readSectionBackgroundState,
   subscribeSectionBackgroundUpdates,
 } from "@/lib/backgrounds/storage";
-import type { SectionBackgroundConfig } from "@/lib/backgrounds/types";
+import type { SectionBackgroundConfig, SectionKey } from "@/lib/backgrounds/types";
+
+const DEFAULT_SECTION_PRESET: Partial<Record<SectionKey, string>> = {
+  home: "rose-dream",
+  chat: "coffee-cozy",
+  settings: "mint-garden",
+};
+
+const DEFAULT_FALLBACK_DIM = 0.16;
 
 export default function SectionBackgroundLayer() {
   const pathname = usePathname();
@@ -27,7 +35,7 @@ export default function SectionBackgroundLayer() {
 
     const state = readSectionBackgroundState();
     const sectionConfig = state[sectionKey];
-    setConfig(sectionConfig && sectionConfig.enabled ? sectionConfig : null);
+    setConfig(sectionConfig ?? null);
 
     if (!sectionConfig || !sectionConfig.enabled || sectionConfig.source !== "upload") {
       if (objectUrlRef.current) {
@@ -85,29 +93,50 @@ export default function SectionBackgroundLayer() {
     [],
   );
 
-  if (!sectionKey || !config || !config.enabled) return null;
+  if (!sectionKey) return null;
+
+  const fallbackPresetId = DEFAULT_SECTION_PRESET[sectionKey] ?? null;
+  const fallbackSource = fallbackPresetId ? BACKGROUND_PRESET_MAP[fallbackPresetId]?.src ?? null : null;
+
+  const effectiveConfig: SectionBackgroundConfig | null =
+    config?.enabled
+      ? config
+      : config === null && fallbackSource
+        ? {
+            enabled: true,
+            source: "preset",
+            value: fallbackPresetId as string,
+            dim: DEFAULT_FALLBACK_DIM,
+            blur: 0,
+            updatedAt: 0,
+          }
+        : null;
+
+  if (!effectiveConfig || !effectiveConfig.enabled) return null;
 
   const source =
-    config.source === "preset"
-      ? BACKGROUND_PRESET_MAP[config.value]?.src ?? null
+    effectiveConfig.source === "preset"
+      ? BACKGROUND_PRESET_MAP[effectiveConfig.value]?.src ?? null
       : uploadSrc;
 
-  if (!source) return null;
+  const resolvedSource = source ?? fallbackSource;
+
+  if (!resolvedSource) return null;
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url("${source}")`,
-          filter: config.blur > 0 ? `blur(${config.blur}px)` : undefined,
-          transform: config.blur > 0 ? "scale(1.02)" : undefined,
+          backgroundImage: `url("${resolvedSource}")`,
+          filter: effectiveConfig.blur > 0 ? `blur(${effectiveConfig.blur}px)` : undefined,
+          transform: effectiveConfig.blur > 0 ? "scale(1.02)" : undefined,
         }}
       />
-      {config.dim > 0 && (
+      {effectiveConfig.dim > 0 && (
         <div
           className="absolute inset-0"
-          style={{ backgroundColor: `rgba(14, 10, 16, ${config.dim})` }}
+          style={{ backgroundColor: `rgba(14, 10, 16, ${effectiveConfig.dim})` }}
         />
       )}
     </div>

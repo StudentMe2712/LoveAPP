@@ -153,3 +153,8 @@
 
 ## 0.1.20 - 2026-03-02
 - [PWA] Fixed auth proxy matcher to bypass `/manifest.json` (in addition to `manifest.webmanifest`), preventing login redirects on manifest fetch and restoring proper Home Screen web-app installation behavior.
+
+## 0.1.21 - 2026-03-02
+- [Dev UX] Disabled Next.js dev indicator (`N` badge) via `devIndicators: false` in `next.config.ts`.
+- [Backgrounds] Added a safe fallback section background preset for `home`, `chat`, and `settings` when no per-section config is present, avoiding plain "vanilla" background after storage resets/tunnel domain changes.
+- [Perf] Reduced route transition delay by removing template-level framer-motion enter animation and prefetching swipe routes in `SwipeableLayout`.
