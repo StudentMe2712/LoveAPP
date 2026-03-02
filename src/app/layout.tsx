@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import SwipeableLayout from "@/components/SwipeableLayout";
 import BottomNav from "@/components/BottomNav";
 import PwaDevCleanup from "@/components/PwaDevCleanup";
-import SectionBackgroundLayer from "@/components/SectionBackgroundLayer";
 import PresenceHeartbeat from "@/components/PresenceHeartbeat";
 import "./globals.css";
 
@@ -48,7 +47,6 @@ export default function RootLayout({
         <ThemeProvider>
           <PwaDevCleanup />
           <PresenceHeartbeat />
-          <SectionBackgroundLayer />
           <div className="relative z-10">
             <SwipeableLayout>
               {children}

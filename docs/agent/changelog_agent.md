@@ -161,3 +161,6 @@
 
 ## 0.1.22 - 2026-03-02
 - [Backgrounds] Removed automatic fallback section backgrounds and restored previous behavior: in-app GUI background changes only when the user explicitly configures section backgrounds in Settings.
+
+## 0.1.23 - 2026-03-02
+- [GUI] Disabled global section background rendering layer in `layout.tsx` to fully restore the previous in-app visual baseline; PWA app icon/manifest behavior remains unchanged and affects only install/Home Screen icon.
