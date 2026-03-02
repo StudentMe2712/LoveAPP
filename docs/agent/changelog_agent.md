@@ -147,3 +147,6 @@
 
 ## 0.1.18 - 2026-03-02
 - [PWA] Re-generated app icons from the updated `public/icons/content.png` using transparent-boundary crop + centered composition on opaque background to remove dark outer halo/background artifacts on Home Screen.
+
+## 0.1.19 - 2026-03-02
+- [PWA] Re-enabled Service Worker registration on production `*.trycloudflare.com` hosts in `PwaDevCleanup` so Home Screen launch opens in standalone app mode instead of regular browser tab.
