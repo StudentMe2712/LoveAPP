@@ -164,3 +164,6 @@
 
 ## 0.1.23 - 2026-03-02
 - [GUI] Disabled global section background rendering layer in `layout.tsx` to fully restore the previous in-app visual baseline; PWA app icon/manifest behavior remains unchanged and affects only install/Home Screen icon.
+
+## 0.1.24 - 2026-03-02
+- [PWA] On `*.trycloudflare.com` hosts, Service Worker is now disabled/cleaned again (same as local/dev) with cleanup key bump to force one-time cache reset on iPhone, fixing stale UI and slow transitions caused by outdated SW caches.
