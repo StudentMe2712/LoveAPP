@@ -150,3 +150,6 @@
 
 ## 0.1.19 - 2026-03-02
 - [PWA] Re-enabled Service Worker registration on production `*.trycloudflare.com` hosts in `PwaDevCleanup` so Home Screen launch opens in standalone app mode instead of regular browser tab.
+
+## 0.1.20 - 2026-03-02
+- [PWA] Fixed auth proxy matcher to bypass `/manifest.json` (in addition to `manifest.webmanifest`), preventing login redirects on manifest fetch and restoring proper Home Screen web-app installation behavior.
