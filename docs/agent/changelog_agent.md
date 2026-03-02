@@ -158,3 +158,6 @@
 - [Dev UX] Disabled Next.js dev indicator (`N` badge) via `devIndicators: false` in `next.config.ts`.
 - [Backgrounds] Added a safe fallback section background preset for `home`, `chat`, and `settings` when no per-section config is present, avoiding plain "vanilla" background after storage resets/tunnel domain changes.
 - [Perf] Reduced route transition delay by removing template-level framer-motion enter animation and prefetching swipe routes in `SwipeableLayout`.
+
+## 0.1.22 - 2026-03-02
+- [Backgrounds] Removed automatic fallback section backgrounds and restored previous behavior: in-app GUI background changes only when the user explicitly configures section backgrounds in Settings.
